@@ -61,8 +61,8 @@ if (isset($_POST['save_category'])) {
     $id = isset($_POST['id']) ? $_POST['id'] : null;
 
     if (empty($id)) {
-        // Cek duplikat
-        $check = $conn->prepare("SELECT id FROM category WHERE category = ?");
+        // Cek duplikat (case-insensitive)
+        $check = $conn->prepare("SELECT id FROM category WHERE LOWER(category) = LOWER(?)");
         $check->bind_param("s", $category);
         $check->execute();
         $check_result = $check->get_result();
@@ -87,6 +87,20 @@ if (isset($_POST['save_category'])) {
         header("Location: kategori_kasir.php");
         exit();
     } else {
+        // Cek duplikat saat update (case-insensitive, kecuali id yang sedang diedit)
+        $check = $conn->prepare("SELECT id FROM category WHERE LOWER(category) = LOWER(?) AND id != ?");
+        $check->bind_param("si", $category, $id);
+        $check->execute();
+        $check_result = $check->get_result();
+        if ($check_result->num_rows > 0) {
+            $_SESSION['swal'] = [
+                'icon' => 'error',
+                'title' => 'Gagal!',
+                'text' => 'Nama kategori sudah ada, gunakan nama lain!'
+            ];
+            header("Location: kategori_kasir.php");
+            exit();
+        }
         $sql = "UPDATE category SET category = ? WHERE id = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("si", $category, $id);

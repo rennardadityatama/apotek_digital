@@ -16,44 +16,81 @@ $stmt->execute();
 $result = $stmt->get_result();
 $admin = $result->fetch_assoc();
 
-// Ambil data dari tabel transactions JOIN dengan produk, member, dan payment method jika perlu
+// Filter and Pagination
+$filter_year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
+$filter_month = isset($_GET['month']) ? intval($_GET['month']) : 0;
+$filter_week = isset($_GET['week']) ? intval($_GET['week']) : 0;
+$page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+$limit = 10;
+$offset = ($page - 1) * $limit;
+
+// Build WHERE clause
+$where = "YEAR(t.date) = $filter_year";
+if ($filter_month) $where .= " AND MONTH(t.date) = $filter_month";
+if ($filter_week) $where .= " AND WEEK(t.date, 1) = $filter_week";
+
+// Hitung total data
+$countQuery = "
+    SELECT COUNT(DISTINCT t.id) as total
+    FROM transactions t
+    WHERE $where
+";
+$countResult = $conn->query($countQuery);
+$totalRows = $countResult->fetch_assoc()['total'] ?? 0;
+$totalPages = ceil($totalRows / $limit);
+
+// Query transaksi + join detail
 $query = "
     SELECT 
         t.id,
         t.date,
         t.total_price,
+        t.payment_method,
         a.username AS admin_name,
         m.name AS member_name,
+        td.fid_product,
+        td.quantity,
         p.product_name,
-        t.payment_method
+        p.harga_awal,
+        p.margin
     FROM transactions t
     LEFT JOIN admin a ON t.fid_admin = a.id
     LEFT JOIN member m ON t.fid_member = m.id
     LEFT JOIN transactions_details td ON td.fid_transaction = t.id
     LEFT JOIN products p ON td.fid_product = p.id
+    WHERE $where
+    ORDER BY t.date DESC
+    LIMIT $limit OFFSET $offset
 ";
 $result = $conn->query($query);
 
 // Siapkan data dan hitung total
 $transactions = [];
-$total = 0;
+$total_penjualan = 0;
+$total_modal = 0;
+$total_keuntungan = 0;
 
 while ($row = $result->fetch_assoc()) {
+    $modal = ($row['harga_awal'] ?? 0) * ($row['quantity'] ?? 1);
+    $keuntungan = ($row['margin'] ?? 0) * ($row['quantity'] ?? 1);
+
     $transactions[] = [
-        'id' => $row['id'],  // Include the id here
+        'id' => $row['id'],
         'invoice' => 'INV' . str_pad($row['id'], 3, '0', STR_PAD_LEFT),
         'product' => $row['product_name'] ?? '—',
         'customer' => $row['member_name'] ?? 'Umum',
         'admin' => $row['admin_name'] ?? '—',
-        'qty' => 1,
+        'qty' => $row['quantity'] ?? 1,
         'total' => $row['total_price'],
-        'payment_method' => $row['payment_method'] ?? '—',  // Add payment method
-        'receipt_link' => 'struk.php?id=' . $row['id'], // Add link to generate/download receipt
-        'date' => $row['date'], // Add the date field
+        'payment_method' => $row['payment_method'] ?? '—',
+        'date' => $row['date'],
+        'modal' => $modal,
+        'keuntungan' => $keuntungan
     ];
 
-    // Calculate subtotal
-    $total += $row['total_price']; // Add total price for each transaction to the subtotal
+    $total_penjualan += $row['total_price'];
+    $total_modal += $modal;
+    $total_keuntungan += $keuntungan;
 }
 ?>
 
@@ -358,6 +395,28 @@ while ($row = $result->fetch_assoc()) {
                 <!-- Kalau mau ada tombol tambah transaksi bisa ditambah disini -->
             </div>
 
+            <!-- Filter Form -->
+            <form method="GET" class="mb-3 d-flex gap-2 align-items-center">
+                <select name="year" class="form-select form-select-sm" style="width:100px;">
+                    <?php for ($y = date('Y'); $y >= date('Y') - 5; $y--): ?>
+                        <option value="<?= $y ?>" <?= $filter_year == $y ? 'selected' : '' ?>><?= $y ?></option>
+                    <?php endfor; ?>
+                </select>
+                <select name="month" class="form-select form-select-sm" style="width:100px;">
+                    <option value="0">Bulan</option>
+                    <?php for ($m = 1; $m <= 12; $m++): ?>
+                        <option value="<?= $m ?>" <?= $filter_month == $m ? 'selected' : '' ?>><?= date('F', mktime(0, 0, 0, $m, 1)) ?></option>
+                    <?php endfor; ?>
+                </select>
+                <select name="week" class="form-select form-select-sm" style="width:100px;">
+                    <option value="0">Minggu</option>
+                    <?php for ($w = 1; $w <= 53; $w++): ?>
+                        <option value="<?= $w ?>" <?= $filter_week == $w ? 'selected' : '' ?>>Minggu <?= $w ?></option>
+                    <?php endfor; ?>
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+            </form>
+
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle text-center">
                     <thead class="table-dark">
@@ -369,14 +428,16 @@ while ($row = $result->fetch_assoc()) {
                             <th>Admin</th>
                             <th>Jumlah</th>
                             <th>Total</th>
+                            <th>Modal</th>
+                            <th>Keuntungan</th>
                             <th>Payment Method</th>
                             <th>Tanggal</th>
                             <th>Struk</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php $no = 1; ?>
-                        <?php foreach ($transactions as $t): ?> <!-- Ensure you're using $t here -->
+                        <?php $no = 1;
+                        foreach ($transactions as $t): ?>
                             <tr>
                                 <td><?= $no++; ?></td>
                                 <td><?= htmlspecialchars($t['invoice']); ?></td>
@@ -385,8 +446,10 @@ while ($row = $result->fetch_assoc()) {
                                 <td><?= htmlspecialchars($t['admin']); ?></td>
                                 <td><?= $t['qty']; ?></td>
                                 <td>Rp. <?= number_format($t['total'], 0, ',', '.'); ?></td>
+                                <td>Rp. <?= number_format($t['modal'], 0, ',', '.'); ?></td>
+                                <td>Rp. <?= number_format($t['keuntungan'], 0, ',', '.'); ?></td>
                                 <td><?= htmlspecialchars($t['payment_method']); ?></td>
-                                <td><?= date('D, M d, Y', strtotime($t['date'])); ?></td> <!-- Display date in the table -->
+                                <td><?= date('D, M d, Y', strtotime($t['date'])); ?></td>
                                 <td>
                                     <a href="struk.php?transaction_id=<?= $t['id'] ?>" class="btn btn-info" title="Lihat Struk">
                                         <i class="fas fa-eye"></i>
@@ -397,16 +460,59 @@ while ($row = $result->fetch_assoc()) {
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-
                         <!-- Display Sub Total -->
                         <tr>
-                            <td colspan="7" class="text-end fw-bold">Sub Total</td>
-                            <td class="fw-bold">Rp. <?= number_format($total, 0, ',', '.'); ?></td>
-                            <td></td> <!-- Empty cell for Struk column -->
+                            <td colspan="6" class="text-end fw-bold">Total</td>
+                            <td class="fw-bold">Rp. <?= number_format($total_penjualan, 0, ',', '.'); ?></td>
+                            <td class="fw-bold">Rp. <?= number_format($total_modal, 0, ',', '.'); ?></td>
+                            <td class="fw-bold">Rp. <?= number_format($total_keuntungan, 0, ',', '.'); ?></td>
+                            <td colspan="3"></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
+            <!-- Rincian Total Penjualan, Modal, Keuntungan -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <div class="card text-bg-primary mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title mb-2">Total Penjualan</h5>
+                            <p class="card-text fs-4 fw-bold">Rp. <?= number_format($total_penjualan, 0, ',', '.'); ?></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-bg-warning mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title mb-2">Total Modal</h5>
+                            <p class="card-text fs-4 fw-bold">Rp. <?= number_format($total_modal, 0, ',', '.'); ?></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-bg-success mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title mb-2">Total Keuntungan</h5>
+                            <p class="card-text fs-4 fw-bold">Rp. <?= number_format($total_keuntungan, 0, ',', '.'); ?></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <nav>
+                <ul class="pagination justify-content-center">
+                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                        <li class="page-item <?= $i == $page ? 'active' : '' ?>">
+                            <a class="page-link"
+                                href="?year=<?= $filter_year ?>&month=<?= $filter_month ?>&week=<?= $filter_week ?>&page=<?= $i ?>">
+                                <?= $i ?>
+                            </a>
+                        </li>
+                    <?php endfor; ?>
+                </ul>
+            </nav>
         </div>
     </div>
     </div>

@@ -87,6 +87,20 @@ if (isset($_POST['save_category'])) {
         header("Location: kategori.php");
         exit();
     } else {
+        // Cek duplikat nama kategori (case-insensitive, kecuali id yang sedang diedit)
+        $check = $conn->prepare("SELECT id FROM category WHERE LOWER(category) = LOWER(?) AND id != ?");
+        $check->bind_param("si", $category, $id);
+        $check->execute();
+        $check_result = $check->get_result();
+        if ($check_result->num_rows > 0) {
+            $_SESSION['swal'] = [
+                'icon' => 'error',
+                'title' => 'Gagal!',
+                'text' => 'Nama kategori sudah ada, gunakan nama lain!'
+            ];
+            header("Location: kategori.php");
+            exit();
+        }
         $sql = "UPDATE category SET category = ? WHERE id = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("si", $category, $id);

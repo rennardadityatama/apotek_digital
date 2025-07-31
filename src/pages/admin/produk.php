@@ -133,7 +133,7 @@ if (isset($_POST['save_products'])) {
             $sql = "INSERT INTO products (product_name, barcode, fid_kategori, harga_awal, harga_jual, margin, stok, expired_at, image, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param(
-                "sssddddiss",
+                "ssiddidsss",
                 $product_name,
                 $barcode,
                 $fid_kategori,
@@ -188,7 +188,7 @@ if (isset($_POST['save_products'])) {
                 $sql = "UPDATE products SET product_name=?, barcode=?, fid_kategori=?, harga_awal=?, harga_jual=?, margin=?, stok=?, expired_at=?, image=?, description=? WHERE id=?";
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param(
-                    "sssddddissi",
+                    "ssidddisssi",
                     $product_name,
                     $barcode,
                     $fid_kategori,
@@ -210,7 +210,7 @@ if (isset($_POST['save_products'])) {
             $sql = "UPDATE products SET product_name=?, barcode=?, fid_kategori=?, harga_awal=?, harga_jual=?, margin=?, stok=?, expired_at=?, description=? WHERE id=?";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param(
-                "sssddddisi",
+                "ssidddissi",
                 $product_name,
                 $barcode,
                 $fid_kategori,
@@ -778,15 +778,19 @@ if (isset($_POST['save_products'])) {
 
             document.querySelectorAll(".editProduct").forEach(btn => {
                 btn.addEventListener("click", () => {
-                    for (const key in fields) {
-                        const input = document.getElementById(fields[key]);
-                        if (input) input.value = btn.dataset[key] || '';
-                    }
-                    // Tampilkan stok lama
+                    document.getElementById("productId").value = btn.dataset.id || '';
+                    document.getElementById("namaProduk").value = btn.dataset.name || '';
+                    document.getElementById("barcodeInput").value = btn.dataset.barcode || '';
+                    document.getElementById("kategori").value = btn.dataset.kategori || '';
+                    document.getElementById("harga_awal").value = btn.dataset.harga_awal || '';
+                    document.getElementById("harga_jual").value = btn.dataset.harga_jual || '';
+                    document.getElementById("margin").value = (btn.dataset.harga_jual - btn.dataset.harga_awal) || '';
                     document.getElementById("stok").value = 0;
+                    document.getElementById("expired_at").value = btn.dataset.expired || '';
+                    document.getElementById("description").value = btn.dataset.description || '';
                     document.getElementById("stokLamaText").innerHTML = "Stok saat ini: <strong>" + btn.dataset.stok + "</strong>";
-                    imageText.innerHTML = `Gambar saat ini: <strong>${btn.dataset.image}</strong>`;
-                    modalLabel.innerHTML = '<i class="fas fa-edit"></i> Edit Produk';
+                    document.getElementById("currentImageText").innerHTML = `Gambar saat ini: <strong>${btn.dataset.image}</strong>`;
+                    document.getElementById("modalLabel").innerHTML = '<i class="fas fa-edit"></i> Edit Produk';
                     generateBarcode();
                     modal.show();
                 });

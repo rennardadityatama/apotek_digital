@@ -393,7 +393,7 @@ $no = 1;
                             <td><?= htmlspecialchars($row['created_at']); ?></td>
                             <td>
                                 <a href="../../activities/admin/edit_member.php?id=<?= $row['id']; ?>" class="btn edit">Edit</a>
-                                <a href="../../activities/admin/delete_member.php?id=<?= $row['id']; ?>" class="btn delete" onclick="return confirm('Yakin ingin menghapus admin ini?');">Hapus</a>
+                                <a href="../../activities/admin/delete_member.php?id=<?= $row['id']; ?>" class="btn delete" onclick="return confirm('Yakin ingin menghapus member ini?');">Hapus</a>
                             </td>
                         </tr>
                     <?php endwhile; ?>

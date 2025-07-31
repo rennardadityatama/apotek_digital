@@ -637,7 +637,7 @@ if (isset($_GET['update_cart']) && isset($_GET['id']) && is_numeric($_GET['id'])
             <i class="fa fa-smile profile-icon" onclick="toggleDropdown()"></i>
             <div class="dropdown-menu" id="dropdownMenu">
                 <div class="dropdown-header">
-                    <img src="../assets/img/admin/<?= $admin['image']; ?>" alt="User Image">
+                    <img src="../../assets/img/admin/<?= $admin['image']; ?>" alt="User Image">
                     <div>
                         <strong><?= $admin['username']; ?></strong>
                         <p style="font-size: 12px; margin: 0;"><?= $admin['email']; ?></p>
@@ -1066,8 +1066,16 @@ if (isset($_GET['update_cart']) && isset($_GET['id']) && is_numeric($_GET['id'])
             barcodeInput.focus();
 
             // Jika user klik di mana saja, tetap fokus di input barcode
-            document.body.addEventListener('click', function() {
-                barcodeInput.focus();
+            document.body.addEventListener('click', function(e) {
+                const cartModal = document.getElementById('cartModal');
+                // CEK: Jika klik pada dropdown kategori, jangan fokus barcode
+                const kategoriDropdown = document.querySelector('select[name="kategori"]');
+                if (
+                    !cartModal.classList.contains('show') &&
+                    !(kategoriDropdown && kategoriDropdown.contains(e.target))
+                ) {
+                    barcodeInput.focus();
+                }
             });
 
             let barcode = '';
