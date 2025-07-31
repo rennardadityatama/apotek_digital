@@ -466,11 +466,6 @@ if (isset($_POST['save_category'])) {
                             <label for="namaKategori" class="form-label">Nama Kategori</label>
                             <input type="text" name="category" class="form-control" id="namaKategori" placeholder="Masukkan nama kategori">
                         </div>
-                        <div class="mb-3">
-                            <label for="fotoKategori" class="form-label">Upload Foto</label>
-                            <input type="file" name="image" class="form-control" id="fotoKategori">
-                            <div class="form-text" id="currentImageText"></div>
-                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>

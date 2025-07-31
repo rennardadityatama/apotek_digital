@@ -83,6 +83,9 @@ $html = '
         <p style="margin: 10px 0 5px; font-weight: 700;">Order_ID #' . htmlspecialchars($trans['id']) . '</p>
         <p style="margin: 0; font-weight: 700; font-size: 16px;">Pembayaran Berhasil !</p>
         <hr style="border: 1px solid #ddd; margin: 15px 0;">
+        <div style="margin-bottom:10px; font-size:15px;">
+    Member: <span style="font-weight:700;">' . (!empty($trans['member_name']) ? htmlspecialchars($trans['member_name']) : '-') . '</span>
+</div>
     </div>
 
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">

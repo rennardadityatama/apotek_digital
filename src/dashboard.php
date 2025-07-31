@@ -76,6 +76,15 @@ $total_products = mysqli_fetch_assoc($result_products)['total'] ?? 0;
 $total_category = mysqli_fetch_assoc($result_category)['total'] ?? 0;
 $total_transactions = mysqli_fetch_assoc($result_transactions)['total'] ?? 0;
 
+// Hitung total modal dan margin dari seluruh transaksi
+$query_modal_margin = "SELECT SUM(harga_awal *stok) AS total_modal, SUM(margin * stok) AS total_margin FROM products";
+$result_modal_margin = mysqli_query($conn, $query_modal_margin);
+$row_modal_margin = mysqli_fetch_assoc($result_modal_margin);
+$total_modal = $row_modal_margin['total_modal'] ?? 0;
+$total_margin = $row_modal_margin['total_margin'] ?? 0;
+
+// Tambahkan kode untuk menghitung total revenue
+$total_revenue = array_sum($data);
 ?>
 
 <!DOCTYPE html>
@@ -330,16 +339,36 @@ $total_transactions = mysqli_fetch_assoc($result_transactions)['total'] ?? 0;
       <div class="stat-box">Data Kategori<br><strong><?= $total_category ?></strong></div>
       <div class="stat-box">Total Transaksi<br><strong><?= $total_transactions ?></strong></div>
     </div>
-    <div class="chart-container">
-      <h3>Total Pendapatan Berdasarkan Periode Waktu</h3>
-      <form method="get" class="mb-2">
-        <select name="periode" onchange="this.form.submit()" class="form-select" style="width:200px;display:inline-block;">
-          <option value="harian" <?= $periode == 'harian' ? 'selected' : '' ?>>Per Hari</option>
-          <option value="mingguan" <?= $periode == 'mingguan' ? 'selected' : '' ?>>Per Minggu</option>
-          <option value="bulanan" <?= $periode == 'bulanan' ? 'selected' : '' ?>>Per Bulan</option>
-        </select>
-      </form>
-      <canvas id="revenueChart"></canvas>
+    <div class="chart-flex" style="display: flex; gap: 30px; align-items: flex-start;">
+      <div class="chart-container" style="flex: 2;">
+        <h3>Total Pendapatan Berdasarkan Periode Waktu</h3>
+        <form method="get" class="mb-2">
+          <select name="periode" onchange="this.form.submit()" class="form-select"
+            style="width:200px;display:inline-block;">
+            <option value="harian" <?= $periode == 'harian' ? 'selected' : '' ?>>Per Hari</option>
+            <option value="mingguan" <?= $periode == 'mingguan' ? 'selected' : '' ?>>Per Minggu</option>
+            <option value="bulanan" <?= $periode == 'bulanan' ? 'selected' : '' ?>>Per Bulan</option>
+          </select>
+        </form>
+        <div style="font-size:18px;margin-bottom:10px;">
+          <strong>
+            Total Pendapatan: Rp <?= number_format($total_revenue, 0, ',', '.') ?>
+          </strong>
+          <br>
+          <span style="font-size:14px;color:#888;">
+            (<?= $periode == 'harian' ? 'Per Hari' : ($periode == 'mingguan' ? 'Per Minggu' : 'Per Bulan') ?>)
+          </span>
+        </div>
+        <canvas id="revenueChart" style="max-width:400px;max-height:250px;"></canvas>
+      </div>
+      <div class="chart-container" style="flex: 1; text-align:center;">
+        <h4>Perbandingan Modal & Margin</h4>
+        <canvas id="pieChart" style="max-width:250px;max-height:250px;margin:auto;"></canvas>
+        <div style="margin-top:10px;">
+          <span style="color:#2196f3;">●</span> Modal: <b>Rp <?= number_format($total_modal, 0, ',', '.') ?></b><br>
+          <span style="color:#ff9800;">●</span> Margin: <b>Rp <?= number_format($total_margin, 0, ',', '.') ?></b>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -394,6 +423,29 @@ $total_transactions = mysqli_fetch_assoc($result_transactions)['total'] ?? 0;
         scales: {
           y: {
             beginAtZero: true
+          }
+        }
+      }
+    });
+
+    // Pie/Doughnut Chart untuk Modal & Margin
+    var pieCtx = document.getElementById('pieChart').getContext('2d');
+    var pieChart = new Chart(pieCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Modal', 'Margin'],
+        datasets: [{
+          data: [<?= $total_modal ?>, <?= $total_margin ?>],
+          backgroundColor: ['#2196f3', '#ff9800'],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        cutout: '70%',
+        plugins: {
+          legend: {
+            display: false
           }
         }
       }

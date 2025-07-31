@@ -1,0 +1,117 @@
+POST: Array
+(
+    [action] => update
+    [id] => 21
+    [product_name] => Yoguhrt
+    [barcode] => 91503113
+    [kategori] => 10
+    [harga_awal] => 9000
+    [harga_jual] => 13000
+    [margin] => 4000
+    [stok] => 0
+    [expired_at] => 2025-07-30
+    [description] => enak
+    [save_products] => 
+)
+
+expired_at: '2025-07-30'
+POST: Array
+(
+    [action] => create
+    [product_name] => rett4
+    [barcode] => 
+    [kategori] => 9
+    [harga_awal] => 90
+    [harga_jual] => 900
+    [margin] => 810
+    [stok] => 1
+    [expired_at] => 2025-07-22
+    [description] => 98888888
+    [save_products] => 
+)
+
+expired_at: '2025-07-22'
+POST: Array
+(
+    [action] => update
+    [id] => 16
+    [product_name] => Air
+    [barcode] => 29188292
+    [kategori] => 9
+    [harga_awal] => 10000
+    [harga_jual] => 11000
+    [margin] => 1000
+    [stok] => 0
+    [expired_at] => 2025-07-30
+    [description] => enak
+    [save_products] => 
+)
+
+expired_at: '2025-07-30'
+POST: Array
+(
+    [action] => update
+    [id] => 16
+    [product_name] => Air
+    [barcode] => 29188292
+    [kategori] => 9
+    [harga_awal] => 10000
+    [harga_jual] => 11000
+    [margin] => 1000
+    [stok] => 0
+    [expired_at] => 2025-07-31
+    [description] => enak
+    [save_products] => 
+)
+
+expired_at: '2025-07-31'
+POST: Array
+(
+    [action] => update
+    [id] => 21
+    [product_name] => Yoguhrt
+    [barcode] => 91503113
+    [kategori] => 10
+    [harga_awal] => 9000
+    [harga_jual] => 13000
+    [margin] => 4000
+    [stok] => 0
+    [expired_at] => 2025-08-30
+    [description] => enak
+    [save_products] => 
+)
+
+expired_at: '2025-08-30'
+POST: Array
+(
+    [action] => update
+    [id] => 22
+    [product_name] => Botol
+    [barcode] => 69989276
+    [kategori] => 11
+    [harga_awal] => 21000
+    [harga_jual] => 25000
+    [margin] => 4000
+    [stok] => 0
+    [expired_at] => 2025-07-31
+    [description] => wenak
+    [save_products] => 
+)
+
+expired_at: '2025-07-31'
+POST: Array
+(
+    [action] => create
+    [product_name] => key
+    [barcode] => 
+    [kategori] => 3
+    [harga_awal] => 11
+    [harga_jual] => 123
+    [margin] => 112
+    [stok] => 1
+    [expired_at] => 2025-07-24
+    [description] => poopo
+    [save_products] => 
+)
+
+expired_at: '2025-07-24'

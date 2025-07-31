@@ -38,13 +38,22 @@ if (isset($_GET['add_to_cart']) && is_numeric($_GET['add_to_cart'])) {
         $_SESSION['error'] = 'Keranjang hanya boleh berisi maksimal 5 produk berbeda.';
     } else {
         // Cek stok produk saat ini
-        $stmt_stok = $conn->prepare("SELECT stok FROM products WHERE id = ?");
+        // Ambil stok dan expired
+        $stmt_stok = $conn->prepare("SELECT stok, expired_at FROM products WHERE id = ?");
         $stmt_stok->bind_param("i", $productId);
         $stmt_stok->execute();
         $result_stok = $stmt_stok->get_result()->fetch_assoc();
         $stmt_stok->close();
 
-        if ($result_stok && $result_stok['stok'] > 0) {
+        $isExpired = false;
+        if ($result_stok && !empty($result_stok['expired_at']) && $result_stok['expired_at'] !== '0000-00-00') {
+            $today = date('Y-m-d');
+            $isExpired = ($result_stok['expired_at'] <= $today);
+        }
+
+        if ($isExpired) {
+            $_SESSION['error'] = 'Produk sudah expired, tidak bisa ditambahkan ke keranjang.';
+        } elseif ($result_stok && $result_stok['stok'] > 0) {
             // Kurangi stok 1
             $stmt_update = $conn->prepare("UPDATE products SET stok = stok - 1 WHERE id = ?");
             $stmt_update->bind_param("i", $productId);
@@ -85,13 +94,22 @@ if (isset($_GET['scan_barcode'])) {
             $_SESSION['error'] = 'Keranjang hanya boleh berisi maksimal 5 produk berbeda.';
         } else {
             // Cek stok produk saat ini
-            $stmt_stok = $conn->prepare("SELECT stok FROM products WHERE id = ?");
+            // Ambil stok dan expired
+            $stmt_stok = $conn->prepare("SELECT stok, expired_at FROM products WHERE id = ?");
             $stmt_stok->bind_param("i", $productId);
             $stmt_stok->execute();
             $result_stok = $stmt_stok->get_result()->fetch_assoc();
             $stmt_stok->close();
 
-            if ($result_stok && $result_stok['stok'] > 0) {
+            $isExpired = false;
+            if ($result_stok && !empty($result_stok['expired_at']) && $result_stok['expired_at'] !== '0000-00-00') {
+                $today = date('Y-m-d');
+                $isExpired = ($result_stok['expired_at'] <= $today);
+            }
+
+            if ($isExpired) {
+                $_SESSION['error'] = 'Produk sudah expired, tidak bisa ditambahkan ke keranjang.';
+            } elseif ($result_stok && $result_stok['stok'] > 0) {
                 // Kurangi stok 1
                 $stmt_update = $conn->prepare("UPDATE products SET stok = stok - 1 WHERE id = ?");
                 $stmt_update->bind_param("i", $productId);
@@ -179,7 +197,7 @@ if (isset($_POST['order'])) {
     $detail = '';
     $details_for_insert = [];
     foreach ($filtered_cart as $product_id => $qty) {
-        $stmt_p = $conn->prepare("SELECT product_name, harga_jual FROM products WHERE id = ?");
+        $stmt_p = $conn->prepare("SELECT product_name, harga_jual, margin FROM products WHERE id = ?");
         $stmt_p->bind_param("i", $product_id);
         $stmt_p->execute();
         $res_p = $stmt_p->get_result()->fetch_assoc();
@@ -189,8 +207,10 @@ if (isset($_POST['order'])) {
 
         $harga = $res_p['harga_jual'];
         $nama = $res_p['product_name'];
+        $margin = $res_p['margin']; // ambil margin per produk
         $subtotal = $harga * $qty;
         $total_price += $subtotal;
+        $margin_total += $margin * $qty; // tambahkan margin total
         $detail .= "$nama x $qty, ";
 
         $details_for_insert[] = [
@@ -263,7 +283,7 @@ if (isset($_POST['order'])) {
                 }
             }
         }
-        
+
         if (empty($_SESSION['cart'])) unset($_SESSION['cart']);
         unset($_SESSION['member']);
         $_SESSION['success'] = "Transaksi berhasil! ID Transaksi: $transaction_id";
@@ -281,6 +301,53 @@ if (isset($_POST['order'])) {
         $stmt->execute();
         $stmt->close();
     }
+}
+
+if (isset($_GET['clear_cart'])) {
+    unset($_SESSION['cart']);
+    $_SESSION['error'] = 'Waktu transaksi habis, keranjang dikosongkan.';
+    header('Location: transaksi.php');
+    exit();
+}
+
+if (isset($_GET['update_cart']) && isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $id = (int)$_GET['id'];
+    if (isset($_SESSION['cart'][$id])) {
+        if ($_GET['update_cart'] === 'plus') {
+            // Cek stok produk
+            $stmt = $conn->prepare("SELECT stok FROM products WHERE id = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $stok = $stmt->get_result()->fetch_assoc()['stok'] ?? 0;
+            $stmt->close();
+            if ($stok > 0) {
+                $_SESSION['cart'][$id]++;
+                // Kurangi stok di database
+                $stmt = $conn->prepare("UPDATE products SET stok = stok - 1 WHERE id = ?");
+                $stmt->bind_param("i", $id);
+                $stmt->execute();
+                $stmt->close();
+            }
+        } elseif ($_GET['update_cart'] === 'minus') {
+            if ($_SESSION['cart'][$id] > 1) {
+                $_SESSION['cart'][$id]--;
+                // Tambah stok di database
+                $stmt = $conn->prepare("UPDATE products SET stok = stok + 1 WHERE id = ?");
+                $stmt->bind_param("i", $id);
+                $stmt->execute();
+                $stmt->close();
+            } else {
+                // Jika qty 1, hapus dari keranjang dan tambah stok
+                unset($_SESSION['cart'][$id]);
+                $stmt = $conn->prepare("UPDATE products SET stok = stok + 1 WHERE id = ?");
+                $stmt->bind_param("i", $id);
+                $stmt->execute();
+                $stmt->close();
+            }
+        }
+    }
+    header("Location: transaksi.php");
+    exit();
 }
 ?>
 
@@ -593,6 +660,11 @@ if (isset($_POST['order'])) {
                     <h5 class="modal-title">Keranjang Belanja & Transaksi</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
+                <?php if (!empty($_SESSION['cart'])): ?>
+                    <div class="alert alert-info text-center mb-3" id="cart-countdown" style="font-size:1.2em;">
+                        Waktu tersisa untuk transaksi: <span id="countdown-timer">05:00</span>
+                    </div>
+                <?php endif; ?>
                 <div class="modal-body">
                     <!-- Form Search Member tetap di luar form transaksi -->
                     <form method="post" action="transaksi.php" class="mt-3">
@@ -631,19 +703,27 @@ if (isset($_POST['order'])) {
                                 <?php
                                 $total = 0;
                                 foreach ($_SESSION['cart'] as $id => $qty):
-                                    $stmt = $conn->prepare("SELECT product_name, harga_jual FROM products WHERE id = ?");
+                                    $stmt = $conn->prepare("SELECT product_name, harga_jual, stok FROM products WHERE id = ?");
                                     $stmt->bind_param("i", $id);
                                     $stmt->execute();
                                     $res = $stmt->get_result()->fetch_assoc();
                                     $nama = htmlspecialchars($res['product_name']);
                                     $harga = $res['harga_jual'];
+                                    $stok = $res['stok'];
                                     $subtotal = $harga * $qty;
                                     $total += $subtotal;
+                                    // Link tambah/kurang
+                                    $linkTambah = "transaksi.php?update_cart=plus&id=$id";
+                                    $linkKurang = "transaksi.php?update_cart=minus&id=$id";
                                 ?>
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         <div>
                                             <span class="me-2"><?= $nama ?></span>
-                                            <span class="px-2 py-1 rounded bg-secondary text-white small" style="font-weight:500; font-size:0.95em; margin-left:4px;"><?= 'x' . $qty ?></span> <!-- Input hidden agar produk & qty terkirim saat submit -->
+                                            <div class="btn-group btn-group-sm ms-2" role="group">
+                                                <a href="<?= $linkKurang ?>" class="btn btn-outline-secondary" <?= $qty <= 1 ? 'disabled' : '' ?>>−</a>
+                                                <span class="px-2"><?= $qty ?></span>
+                                                <a href="<?= $linkTambah ?>" class="btn btn-outline-secondary" <?= $stok <= 0 ? 'disabled' : '' ?>>+</a>
+                                            </div>
                                             <input type="hidden" name="product_ids[]" value="<?= $id ?>">
                                             <input type="hidden" name="qty_selected[<?= $id ?>]" value="<?= $qty ?>">
                                         </div>
@@ -779,7 +859,7 @@ if (isset($_POST['order'])) {
                                 <img src="../../assets/img/product/<?= htmlspecialchars($row["image"]); ?>" class="card-img-top" alt="<?= htmlspecialchars($row["product_name"]); ?>" style="width: 100%; height: 100px; object-fit: cover; border-top-left-radius: 12px; border-top-right-radius: 12px;">
                                 <div class="card-body p-2 text-center text-white d-flex flex-column justify-content-between" style="font-size: 0.8rem;">
                                     <h6 class="mb-1"><?= htmlspecialchars($row["product_name"]); ?></h6>
-                                    <p class="mb-1">Harga: Rp<?= number_format($row["harga_jual"], 2, ',', '.'); ?></p>
+                                    <p class="mb-1">Rp. <?= number_format($row["harga_jual"], 2, ',', '.'); ?></p>
                                     <p class="mb-1">Stok: <?= htmlspecialchars($row["stok"]); ?></p>
                                 </div>
                             </div>
@@ -789,6 +869,9 @@ if (isset($_POST['order'])) {
             </div>
         </div>
     </div>
+
+    <!-- Input tersembunyi untuk menangkap scan barcode fisik -->
+    <input type="text" id="barcodeScanInput" style="position:fixed;left:-9999px;" autocomplete="off" />
 
     <script>
         document.getElementById('transactionForm').addEventListener('submit', function(e) {
@@ -836,6 +919,32 @@ if (isset($_POST['order'])) {
 
             // Hitung awal saat halaman load
             hitungKembalian();
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            <?php if (!empty($_SESSION['cart'])): ?>
+                // Countdown 5 menit (300 detik)
+                let countdown = 300;
+                const timerElem = document.getElementById('countdown-timer');
+                const countdownAlert = document.getElementById('cart-countdown');
+                let interval = setInterval(function() {
+                    let min = Math.floor(countdown / 60);
+                    let sec = countdown % 60;
+                    timerElem.textContent = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+                    if (countdown <= 0) {
+                        clearInterval(interval);
+                        countdownAlert.classList.remove('alert-info');
+                        countdownAlert.classList.add('alert-danger');
+                        timerElem.textContent = "00:00";
+                        countdownAlert.innerHTML = "Waktu habis! Silakan ulangi transaksi.";
+                        // Optional: kosongkan keranjang otomatis
+                        setTimeout(function() {
+                            window.location.href = "transaksi.php?clear_cart=1";
+                        }, 2000);
+                    }
+                    countdown--;
+                }, 1000);
+            <?php endif; ?>
         });
 
         function toggleSidebar() {
@@ -950,6 +1059,34 @@ if (isset($_POST['order'])) {
                 });
             }
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fokuskan input tersembunyi agar scanner fisik bisa langsung input
+            const barcodeInput = document.getElementById('barcodeScanInput');
+            barcodeInput.focus();
+
+            // Jika user klik di mana saja, tetap fokus di input barcode
+            document.body.addEventListener('click', function() {
+                barcodeInput.focus();
+            });
+
+            let barcode = '';
+            let timer = null;
+
+            barcodeInput.addEventListener('input', function(e) {
+                // Deteksi jika input cepat (scanner fisik)
+                if (timer) clearTimeout(timer);
+                barcode += barcodeInput.value;
+                barcodeInput.value = '';
+                timer = setTimeout(function() {
+                    if (barcode.length >= 6) { // minimal 6 digit barcode
+                        window.location.href = "transaksi.php?scan_barcode=" + encodeURIComponent(barcode);
+                    }
+                    barcode = '';
+                }, 200); // 200ms: waktu antar karakter scanner fisik
+            });
+        });
+
     </script>
 
     <?php if (isset($_POST['search_member'])): ?>

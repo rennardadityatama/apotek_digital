@@ -48,7 +48,6 @@ if (isset($_GET['delete_id'])) {
     $stmtCheck->execute();
     $resultCheck = $stmtCheck->get_result();
     $product = $resultCheck->fetch_assoc();
-   
 
     if (!$product) {
         $_SESSION['error'] = 'Produk tidak ditemukan!';
@@ -57,21 +56,17 @@ if (isset($_GET['delete_id'])) {
     }
 
     if ($product['stok'] > 0) {
-        // Kalau stok masih ada, larang hapus
         $_SESSION['error'] = 'Produk tidak bisa dihapus karena stok masih tersedia.';
         header('Location: produk_kasir.php');
         exit();
     } else {
-        // Stok 0, hapus produk dan gambarnya
         $queryDelete = "DELETE FROM products WHERE id = ?";
         $stmtDelete = $conn->prepare($queryDelete);
         $stmtDelete->bind_param("i", $delete_id);
         if ($stmtDelete->execute()) {
-            // Hapus gambar
             $imagePath = $target_dir . $product['image'];
             if (file_exists($imagePath)) unlink($imagePath);
 
-            // **Hapus produk dari keranjang juga jika ada**
             if (isset($_SESSION['cart'][$delete_id])) {
                 unset($_SESSION['cart'][$delete_id]);
             }
@@ -87,31 +82,32 @@ if (isset($_GET['delete_id'])) {
 }
 
 // === HANDLE INSERT / UPDATE ===
-if (isset($_POST['save_products'])) {
-    $id            = $_POST['id'] ?? null;
-    $product_name  = trim($_POST['product_name']);
-    $barcode       = $_POST['barcode'] ?: strval(mt_rand(10000000, 99999999)); // 8 digit
-    $fid_kategori  = $_POST['kategori'];
-    $harga_awal    = $_POST['harga_awal'];
-    $harga_jual    = $_POST['harga_jual'];
-    $margin        = $harga_jual - $harga_awal;
-    $stok          = $_POST['stok'];
-    $expired_at    = !empty($_POST['expired_at']) ? $_POST['expired_at'] : null;
-    $description   = $_POST['description'];
-    $image         = $_FILES['image'];
-    $image_name    = $image['name'] ? uniqid() . "_" . basename($image["name"]) : '';
-    $target_file   = $target_dir . $image_name;
-    $allowed_ext   = ['jpg', 'jpeg', 'png', 'gif'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    if ($action === 'create') {
+        // --- PROSES TAMBAH PRODUK ---
+        $product_name  = trim($_POST['product_name']);
+        $barcode       = $_POST['barcode'] ?: strval(mt_rand(10000000, 99999999)); // 8 digit
+        $fid_kategori  = $_POST['kategori'];
+        $harga_awal    = $_POST['harga_awal'];
+        $harga_jual    = $_POST['harga_jual'];
+        $margin        = $harga_jual - $harga_awal;
+        $stok          = $_POST['stok'];
+        $expired_at    = !empty($_POST['expired_at']) ? $_POST['expired_at'] : null;
+        $description   = $_POST['description'];
+        $image         = $_FILES['image'];
+        $image_name    = $image['name'] ? uniqid() . "_" . basename($image["name"]) : '';
+        $target_file   = $target_dir . $image_name;
+        $allowed_ext   = ['jpg', 'jpeg', 'png', 'gif'];
 
-    // Validasi gambar
-    if ($image['name'] && (!in_array(strtolower(pathinfo($image["name"], PATHINFO_EXTENSION)), $allowed_ext) || $image["size"] > 2 * 1024 * 1024)) {
-        $_SESSION['error'] = 'Format atau ukuran gambar tidak valid!';
-        header('Location: produk_kasir.php');
-        exit();
-    }
+        // Validasi gambar
+        if ($image['name'] && (!in_array(strtolower(pathinfo($image["name"], PATHINFO_EXTENSION)), $allowed_ext) || $image["size"] > 2 * 1024 * 1024)) {
+            $_SESSION['error'] = 'Format atau ukuran gambar tidak valid!';
+            header('Location: produk_kasir.php');
+            exit();
+        }
 
-    // Cek duplikat nama produk
-    if (empty($id)) {
+        // Cek duplikat nama produk
         if (isProductNameDuplicate($conn, $product_name)) {
             $_SESSION['error'] = 'Nama produk sudah ada!';
             header('Location: produk_kasir.php');
@@ -124,16 +120,15 @@ if (isset($_POST['save_products'])) {
             exit();
         }
 
-        // Nama gambar hanya angka random
         $ext = strtolower(pathinfo($image["name"], PATHINFO_EXTENSION));
         $image_name = mt_rand(100000, 999999) . "." . $ext;
         $target_file = $target_dir . $image_name;
 
         if (move_uploaded_file($image["tmp_name"], $target_file)) {
-            $sql = "INSERT INTO products (product_name, barcode, fid_kategori, harga_awal, harga_jual, margin, stok, expired_at, image, description) VALUES (?, ?, ?, ?, ?, ?, ?, NULLIF(?,''), ?, ?)";
+            $sql = "INSERT INTO products (product_name, barcode, fid_kategori, harga_awal, harga_jual, margin, stok, expired_at, image, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param(
-                "sssddddiss",
+                "ssiddidsss",
                 $product_name,
                 $barcode,
                 $fid_kategori,
@@ -156,15 +151,29 @@ if (isset($_POST['save_products'])) {
         } else {
             $_SESSION['error'] = 'Gagal upload gambar!';
         }
-    } else {
+    } elseif ($action === 'update') {
+        // --- PROSES UPDATE PRODUK ---
+        $id           = $_POST['id'];
+        $product_name = trim($_POST['product_name']);
+        $barcode      = $_POST['barcode'];
+        $fid_kategori = $_POST['kategori'];
+        $harga_awal   = $_POST['harga_awal'];
+        $harga_jual   = $_POST['harga_jual'];
+        $margin       = $harga_jual - $harga_awal;
+        $stok         = $_POST['stok'];
+        $expired_at   = isset($_POST['expired_at']) && $_POST['expired_at'] !== '' ? $_POST['expired_at'] : null;
+        $description  = $_POST['description'];
+        $image        = $_FILES['image'];
+
+        // Cek duplikat nama produk
         if (isProductNameDuplicate($conn, $product_name, $id)) {
             $_SESSION['error'] = 'Nama produk sudah ada!';
             header('Location: produk_kasir.php');
             exit();
         }
 
-        // Ambil stok lama dari database
-        $get_old = $conn->prepare("SELECT harga_awal, harga_jual, margin, image, stok FROM products WHERE id = ?");
+        // Ambil data lama
+        $get_old = $conn->prepare("SELECT harga_awal, harga_jual, margin, image, stok, expired_at FROM products WHERE id = ?");
         $get_old->bind_param("i", $id);
         $get_old->execute();
         $old_data = $get_old->get_result()->fetch_assoc();
@@ -177,22 +186,27 @@ if (isset($_POST['save_products'])) {
         // Tambahkan stok baru ke stok lama
         $stok_total = $old_stok + $stok_baru;
 
-        $harga_awal = $_POST['harga_awal'] !== '' ? floatval($_POST['harga_awal']) : $old_data['harga_awal'];
-        $harga_jual = $_POST['harga_jual'] !== '' ? floatval($_POST['harga_jual']) : $old_data['harga_jual'];
-        $margin     = $harga_jual - $harga_awal;
+        // Fallback data lama jika field kosong
+        $product_name = $product_name !== '' ? $product_name : $old_data['product_name'];
+        $barcode      = $barcode !== '' ? $barcode : $old_data['barcode'];
+        $fid_kategori = $fid_kategori !== '' ? $fid_kategori : $old_data['fid_kategori'];
+        $harga_awal   = $harga_awal !== '' ? floatval($harga_awal) : $old_data['harga_awal'];
+        $harga_jual   = $harga_jual !== '' ? floatval($harga_jual) : $old_data['harga_jual'];
+        $margin       = $harga_jual - $harga_awal;
+        $expired_at   = $expired_at !== null ? $expired_at : $old_data['expired_at'];
+        $description  = $description !== '' ? $description : $old_data['description'];
 
         if ($image['name']) {
-            // Nama gambar hanya angka random
             $ext = strtolower(pathinfo($image["name"], PATHINFO_EXTENSION));
             $image_name = mt_rand(100000, 999999) . "." . $ext;
             $target_file = $target_dir . $image_name;
 
             if (move_uploaded_file($image["tmp_name"], $target_file)) {
                 if (file_exists($target_dir . $old_image)) unlink($target_dir . $old_image);
-                $sql = "UPDATE products SET product_name=?, barcode=?, fid_kategori=?, harga_awal=?, harga_jual=?, margin=?, stok=?, expired_at=NULLIF(?,''), image=?, description=? WHERE id=?";
+                $sql = "UPDATE products SET product_name=?, barcode=?, fid_kategori=?, harga_awal=?, harga_jual=?, margin=?, stok=?, expired_at=?, image=?, description=? WHERE id=?";
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param(
-                    "sssddddissi",
+                    "ssidddisssi",
                     $product_name,
                     $barcode,
                     $fid_kategori,
@@ -200,7 +214,7 @@ if (isset($_POST['save_products'])) {
                     $harga_jual,
                     $margin,
                     $stok_total,
-                    $expired_at ?: '',
+                    $expired_at,
                     $image_name,
                     $description,
                     $id
@@ -211,10 +225,10 @@ if (isset($_POST['save_products'])) {
                 exit();
             }
         } else {
-            $sql = "UPDATE products SET product_name=?, barcode=?, fid_kategori=?, harga_awal=?, harga_jual=?, margin=?, stok=?, expired_at=NULLIF(?,''), description=? WHERE id=?";
+            $sql = "UPDATE products SET product_name=?, barcode=?, fid_kategori=?, harga_awal=?, harga_jual=?, margin=?, stok=?, expired_at=?, image=?, description=? WHERE id=?";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param(
-                "sssddddisi",
+                "ssidddisssi",
                 $product_name,
                 $barcode,
                 $fid_kategori,
@@ -223,6 +237,7 @@ if (isset($_POST['save_products'])) {
                 $margin,
                 $stok_total,
                 $expired_at,
+                $old_image,
                 $description,
                 $id
             );
@@ -541,7 +556,7 @@ if (isset($_POST['save_products'])) {
         <div class="data-container">
             <div class="data-header">
                 <h2>Data Produk</h2>
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#productModal">
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createProductModal">
                     <i class="fas fa-plus"></i> Tambah Produk
                 </button>
             </div>
@@ -602,7 +617,7 @@ if (isset($_POST['save_products'])) {
                                 <td class="text-success">Rp <?= number_format($row["harga_jual"], 0, ',', '.'); ?></td>
                                 <td class="text-danger">Rp <?= number_format($margin, 0, ',', '.'); ?></td>
                                 <td><?= $row["stok"]; ?></td>
-                                <td><?= !empty($row["expired_at"]) ? htmlspecialchars($row["expired_at"]) : '-'; ?></td>
+                                <td><?= !empty($row["expired_at"]) && $row["expired_at"] !== "0000-00-00" ? htmlspecialchars($row["expired_at"]) : '-'; ?></td>
                                 <td>
                                     <button class="btn btn-warning btn-sm editProduct"
                                         data-id="<?= $row['id']; ?>"
@@ -614,6 +629,7 @@ if (isset($_POST['save_products'])) {
                                         data-margin="<?= $margin; ?>"
                                         data-stok="<?= $row['stok']; ?>"
                                         data-expired_at="<?= $row['expired_at']; ?>"
+                                        data-updated_at="<?= $row['updated_at'] ?>"
                                         data-description="<?= htmlspecialchars($row['description']); ?>"
                                         data-image="<?= $row['image']; ?>"
                                         title="Edit">
@@ -635,12 +651,12 @@ if (isset($_POST['save_products'])) {
     </div>
     </div>
 
-    <!-- Modal -->
-    <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <!-- Modal Tambah Produk -->
+    <div class="modal fade" id="createProductModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content">
                 <form action="produk_kasir.php" method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="id" id="productId">
+                    <input type="hidden" name="action" value="create">
                     <div class="modal-header">
                         <h5 class="modal-title" id="modalLabel">
                             <i class="fas fa-folder-plus"></i> Tambah Produk
@@ -652,19 +668,18 @@ if (isset($_POST['save_products'])) {
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="namaProduk" class="form-label">Nama Produk</label>
-                                    <input type="text" name="product_name" class="form-control" id="namaProduk">
+                                    <input type="text" name="product_name" class="form-control" id="namaProdukCreate">
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="barcodeInput" class="form-label">Barcode</label>
-                                    <input type="text" name="barcode" id="barcodeInput" class="form-control"
-                                        oninput="generateBarcode(); this.value = this.value.replace(/[^0-9]/g, '').slice(0,8);"
-                                        maxlength="8" pattern="\d{8}" inputmode="numeric"
-                                        placeholder="Kosongkan jika ingin di-generate otomatis">
+                                    <input type="text" name="barcode" id="barcodeInputCreate" class="form-control"
+                                        maxlength="20" pattern="\d*" inputmode="numeric"
+                                        placeholder="Scan barcode atau input manual">
                                     <div id="barcodePreview" class="mt-2"></div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="kategori" class="form-label">Kategori</label>
-                                    <select name="kategori" class="form-control" id="kategori">
+                                    <select name="kategori" class="form-control" id="kategoriCreate">
                                         <option value="">Pilih Kategori</option>
                                         <?php
                                         $kategori = $conn->query("SELECT * FROM category");
@@ -676,33 +691,118 @@ if (isset($_POST['save_products'])) {
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="harga_awal" class="form-label">Harga Awal</label>
-                                    <input type="number" name="harga_awal" class="form-control" id="harga_awal" oninput="hitungMargin()">
+                                    <input type="number" name="harga_awal" class="form-control" id="harga_awal_create" oninput="hitungMarginCreate()">
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="harga_jual" class="form-label">Harga Jual</label>
-                                    <input type="number" name="harga_jual" class="form-control" id="harga_jual" oninput="hitungMargin()">
+                                    <input type="number" name="harga_jual" class="form-control" id="harga_jual_create" oninput="hitungMarginCreate()">
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="margin" class="form-label">Margin</label>
-                                    <input type="number" name="margin" class="form-control" id="margin" readonly>
+                                    <input type="number" name="margin" class="form-control" id="margin_create" readonly>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="stok" class="form-label">Tambah Stok</label>
-                                    <input type="number" name="stok" class="form-control" id="stok" min="0" value="0">
+                                    <input type="number" name="stok" class="form-control" id="stok_create" min="0" value="0">
                                     <div class="form-text" id="stokLamaText"></div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="expired_at" class="form-label">Expired At</label>
-                                    <input type="date" name="expired_at" class="form-control" id="expired_at">
+                                    <input type="date" name="expired_at" class="form-control" id="expired_at_create">
+                                    <div class="form-text" id="expiredAtText"></div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="fotoProduct" class="form-label">Upload Foto</label>
-                                    <input type="file" name="image" class="form-control" id="fotoProduct">
+                                    <input type="file" name="image" class="form-control" id="fotoProductCreate">
                                     <div class="form-text" id="currentImageText"></div>
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label for="description" class="form-label">Description</label>
-                                    <input type="text" name="description" class="form-control" id="description" required>
+                                    <input type="text" name="description" class="form-control" id="descriptionCreate" required readonly
+                                    onfocus="this.removeAttribute('readonly');">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" name="save_products" class="btn btn-success"><i class="fas fa-save"></i> Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Produk -->
+    <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <form action="produk_kasir.php" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="update">
+                    <input type="hidden" name="id" id="editProductId">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel">
+                            <i class="fas fa-edit"></i> Edit Produk
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="container-fluid">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="namaProdukEdit" class="form-label">Nama Produk</label>
+                                    <input type="text" name="product_name" class="form-control" id="namaProdukEdit">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="barcodeInputEdit" class="form-label">Barcode</label>
+                                    <input type="text" name="barcode" id="barcodeInputEdit" class="form-control"
+                                        oninput="generateBarcode(); this.value = this.value.replace(/[^0-9]/g, '').slice(0,8);"
+                                        maxlength="8" pattern="\d{8}" inputmode="numeric"
+                                        placeholder="Kosongkan jika ingin di-generate otomatis">
+                                    <div id="barcodePreviewEdit" class="mt-2"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="kategoriEdit" class="form-label">Kategori</label>
+                                    <select name="kategori" class="form-control" id="kategoriEdit">
+                                        <option value="">Pilih Kategori</option>
+                                        <?php
+                                        $kategori = $conn->query("SELECT * FROM category");
+                                        while ($row = $kategori->fetch_assoc()) {
+                                            echo "<option value ='{$row['id']}'>{$row['category']}</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="harga_awal_edit" class="form-label">Harga Awal</label>
+                                    <input type="number" name="harga_awal" class="form-control" id="harga_awal_edit" oninput="hitungMarginEdit()">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="harga_jual_edit" class="form-label">Harga Jual</label>
+                                    <input type="number" name="harga_jual" class="form-control" id="harga_jual_edit" oninput="hitungMarginEdit()">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="margin_edit" class="form-label">Margin</label>
+                                    <input type="number" name="margin" class="form-control" id="margin_edit" readonly>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="stok_edit" class="form-label">Tambah Stok</label>
+                                    <input type="number" name="stok" class="form-control" id="stok_edit" min="0" value="0">
+                                    <div class="form-text" id="stokLamaTextEdit"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="expired_at_edit" class="form-label">Expired At</label>
+                                    <input type="date" name="expired_at" class="form-control" id="expired_at_edit">
+                                    <div class="form-text" id="expiredAtTextEdit"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="fotoProductEdit" class="form-label">Upload Foto</label>
+                                    <input type="file" name="image" class="form-control" id="fotoProductEdit">
+                                    <div class="form-text" id="currentImageTextEdit"></div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label for="descriptionEdit" class="form-label">Description</label>
+                                    <input type="text" name="description" class="form-control" id="descriptionEdit" required>
                                 </div>
                             </div>
                         </div>
@@ -767,6 +867,20 @@ if (isset($_POST['save_products'])) {
             document.getElementById('margin').value = margin;
         }
 
+        function hitungMarginCreate() {
+            const hargaAwal = parseFloat(document.getElementById('harga_awal_create').value) || 0;
+            const hargaJual = parseFloat(document.getElementById('harga_jual_create').value) || 0;
+            const margin = hargaJual - hargaAwal;
+            document.getElementById('margin_create').value = margin;
+        }
+
+        function hitungMarginEdit() {
+            const hargaAwal = parseFloat(document.getElementById('harga_awal_edit').value) || 0;
+            const hargaJual = parseFloat(document.getElementById('harga_jual_edit').value) || 0;
+            const margin = hargaJual - hargaAwal;
+            document.getElementById('margin_edit').value = margin;
+        }
+
         document.addEventListener("click", function(event) {
             const dropdown = document.getElementById("dropdownMenu");
             const profileIcon = document.querySelector(".profile-icon");
@@ -806,6 +920,18 @@ if (isset($_POST['save_products'])) {
                     imageText.innerHTML = `Gambar saat ini: <strong>${btn.dataset.image}</strong>`;
                     modalLabel.innerHTML = '<i class="fas fa-edit"></i> Edit Produk';
                     generateBarcode();
+
+                    // === Tampilkan tanggal expired lama ===
+                    const expiredInfo = btn.dataset.expired_at ? btn.dataset.expired_at : '-';
+                    let expiredText = document.getElementById("expiredAtText");
+                    if (!expiredText) {
+                        expiredText = document.createElement("div");
+                        expiredText.id = "expiredAtText";
+                        expiredText.className = "form-text";
+                        document.getElementById("expired_at").parentNode.appendChild(expiredText);
+                    }
+                    expiredText.innerHTML = "Tanggal expired sebelum update: <strong>" + expiredInfo + "</strong>";
+
                     modal.show();
                 });
             });
@@ -820,11 +946,71 @@ if (isset($_POST['save_products'])) {
                 document.getElementById("barcodePreview").innerHTML = '';
                 modalLabel.innerHTML = '<i class="fas fa-folder-plus"></i> Tambah Produk';
                 document.getElementById("stokLamaText").innerHTML = '';
+
+                let expiredText = document.getElementById("expiredAtText");
+                if (expiredText) expiredText.innerHTML = '';
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll(".editProduct").forEach(btn => {
+                btn.addEventListener("click", function() {
+                    document.getElementById("editProductId").value = btn.dataset.id;
+                    document.getElementById("namaProdukEdit").value = btn.dataset.name;
+                    document.getElementById("barcodeInputEdit").value = btn.dataset.barcode;
+                    document.getElementById("kategoriEdit").value = btn.dataset.kategori;
+                    document.getElementById("harga_awal_edit").value = btn.dataset.harga_awal;
+                    document.getElementById("harga_jual_edit").value = btn.dataset.harga_jual;
+                    document.getElementById("margin_edit").value = btn.dataset.margin;
+                    document.getElementById("stok_edit").value = 0;
+                    document.getElementById("expired_at_edit").value = btn.dataset.expired_at;
+                    document.getElementById("descriptionEdit").value = btn.dataset.description;
+                    document.getElementById("currentImageTextEdit").innerHTML = `Gambar saat ini: <strong>${btn.dataset.image}</strong>`;
+                    document.getElementById("stokLamaTextEdit").innerHTML = "Stok saat ini: <strong>" + btn.dataset.stok + "</strong>";
+                    document.getElementById("expiredAtTextEdit").innerHTML = "Tanggal expired sebelum update: <strong>" + (btn.dataset.expired_at || '-') + "</strong>";
+                    // Tampilkan modal edit
+                    var editModal = new bootstrap.Modal(document.getElementById("editProductModal"));
+                    editModal.show();
+                });
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var createModal = document.getElementById("createProductModal");
+            createModal.addEventListener("shown.bs.modal", function () {
+                document.getElementById("barcodeInputCreate").focus();
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            var barcodeInput = document.getElementById("barcodeInputCreate");
+            var createModal = document.getElementById("createProductModal");
+
+            // Pastikan input barcode tetap fokus saat modal dibuka
+            createModal.addEventListener("shown.bs.modal", function () {
+                barcodeInput.focus();
+            });
+
+            // Jika barcode diisi (scan), tetap fokus di kolom barcode
+            barcodeInput.addEventListener("input", function() {
+                // Jika scanner mengirim enter/tab, tetap fokus di barcode
+                setTimeout(function() {
+                    barcodeInput.focus();
+                }, 10);
+            });
+
+            barcodeInput.addEventListener("keydown", function(e) {
+                // Jika scanner mengirim Tab atau Enter, tetap fokus di barcode
+                if (e.key === "Tab" || e.key === "Enter") {
+                    e.preventDefault();
+                    barcodeInput.focus();
+                    barcodeInput.select();
+                }
             });
         });
     </script>
 
-     <?php
+    <?php
     if (isset($_SESSION['success'])) {
         echo "<script>
         Swal.fire({

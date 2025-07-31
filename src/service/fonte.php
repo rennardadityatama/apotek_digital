@@ -100,7 +100,43 @@ if (curl_errno($curl)) {
 }
 curl_close($curl);
 
-if (isset($error_msg)) {
-  echo $error_msg;
-}
-echo $response;
+// Tampilkan hasil dengan SweetAlert
+?>
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+<script>
+<?php if (isset($error_msg)) { ?>
+  Swal.fire({
+    icon: 'error',
+    title: 'Gagal!',
+    text: '<?php echo addslashes($error_msg); ?>'
+  }).then(() => {
+    window.close(); // Atau redirect ke halaman lain jika perlu
+  });
+<?php } else { 
+  $res = json_decode($response, true);
+  if (isset($res['status']) && $res['status'] === true) { ?>
+    Swal.fire({
+      icon: 'success',
+      title: 'Berhasil!',
+      text: 'Pesan WhatsApp berhasil dikirim!'
+    }).then(() => {
+      window.close(); // Atau redirect ke halaman lain jika perlu
+    });
+<?php } else { ?>
+    Swal.fire({
+      icon: 'error',
+      title: 'Gagal!',
+      text: 'Pesan WhatsApp gagal dikirim!'
+    }).then(() => {
+      window.close(); // Atau redirect ke halaman lain jika perlu
+    });
+<?php } } ?>
+</script>
+</body>
+</html>

@@ -101,6 +101,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email'])) {
             <button type="submit" name="type" value="login" class="w-full bg-green-500 text-white font-semibold p-3 rounded-md hover:bg-green-600 transition">Forgot</button>
         </form>
     </div>
+
+    <?php
+    if (isset($_SESSION['success'])) {
+        if (strlen($_SESSION['success']) > 3) {
+            echo "<script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: '" . $_SESSION['success'] . "',
+                showConfirmButton: true
+            });
+        </script>";
+        }
+        unset($_SESSION['success']); // Clear the session variable
+    }
+
+    if (isset($_SESSION['error'])) {
+        if (strlen($_SESSION['error']) > 3) {
+            echo "<script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: '" . $_SESSION['error'] . "',
+                showConfirmButton: true
+            });
+        </script>";
+        }
+        unset($_SESSION['error']); // Clear the session variable
+    }
+    ?>
 </body>
 
 </html>

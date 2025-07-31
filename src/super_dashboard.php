@@ -25,6 +25,13 @@ $total_products = mysqli_fetch_assoc($result_products)['total'] ?? 0;
 $total_category = mysqli_fetch_assoc($result_category)['total'] ?? 0;
 $total_transactions = mysqli_fetch_assoc($result_transactions)['total'] ?? 0;
 
+// Hitung total modal dan margin dari seluruh transaksi
+$query_modal_margin = "SELECT SUM(harga_awal * stok) AS total_modal, SUM(margin * stok) AS total_margin FROM products";
+$result_modal_margin = mysqli_query($conn, $query_modal_margin);
+$row_modal_margin = mysqli_fetch_assoc($result_modal_margin);
+$total_modal = $row_modal_margin['total_modal'] ?? 0;
+$total_margin = $row_modal_margin['total_margin'] ?? 0;
+
 // Default: per hari 7 hari terakhir
 $periode = $_GET['periode'] ?? 'harian';
 $labels = [];
@@ -45,6 +52,7 @@ if ($periode == 'mingguan') {
     }
     $labels = array_reverse($labels);
     $data = array_reverse($data);
+    $total_revenue = array_sum($data); // <-- Tambahkan di sini
 } elseif ($periode == 'bulanan') {
     // 6 bulan terakhir
     $query = "SELECT DATE_FORMAT(date, '%Y-%m') as bulan, SUM(total_price) as total 
@@ -60,6 +68,7 @@ if ($periode == 'mingguan') {
     }
     $labels = array_reverse($labels);
     $data = array_reverse($data);
+    $total_revenue = array_sum($data); // <-- Tambahkan di sini
 } else {
     // Harian 7 hari terakhir
     $query = "SELECT DATE(date) as tanggal, SUM(total_price) as total 
@@ -75,6 +84,7 @@ if ($periode == 'mingguan') {
     }
     $labels = array_reverse($labels);
     $data = array_reverse($data);
+    $total_revenue = array_sum($data); // Sudah ada di sini
 }
 ?>
 
@@ -352,6 +362,20 @@ if ($periode == 'mingguan') {
             border-radius: 4px;
             cursor: pointer;
         }
+
+        .chart-flex {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 
@@ -386,7 +410,7 @@ if ($periode == 'mingguan') {
     <div class="sidebar" id="sidebar">
         <h2>BatokMart</h2>
         <div class="menu-item active">
-            <a href="../super_dashboard.php" class="menu-link">
+            <a href="./super_dashboard.php" class="menu-link">
                 <i class="fa fa-home"></i> Beranda
             </a>
         </div>
@@ -424,17 +448,29 @@ if ($periode == 'mingguan') {
             <div class="stat-box">Data Kategori<br><strong><?= $total_category ?></strong></div>
             <div class="stat-box">Total Transaksi<br><strong><?= $total_transactions ?></strong></div>
         </div>
-        <div class="chart-container">
-            <h3>Total Pendapatan Berdasarkan Periode Waktu</h3>
-            <form method="get" class="mb-2">
-                <select name="periode" onchange="this.form.submit()" class="form-select"
-                    style="width:200px;display:inline-block;">
-                    <option value="harian" <?= $periode == 'harian' ? 'selected' : '' ?>>Per Hari</option>
-                    <option value="mingguan" <?= $periode == 'mingguan' ? 'selected' : '' ?>>Per Minggu</option>
-                    <option value="bulanan" <?= $periode == 'bulanan' ? 'selected' : '' ?>>Per Bulan</option>
-                </select>
-            </form>
-            <canvas id="revenueChart"></canvas>
+        <div class="chart-flex" style="display: flex; gap: 30px; align-items: flex-start;">
+            <div class="chart-container" style="flex: 2;">
+                <h3>Total Pendapatan Berdasarkan Periode Waktu</h3>
+                <div style="font-size:18px;margin-bottom:10px;">
+                    <strong>Total: Rp <?= number_format($total_revenue, 0, ',', '.') ?></strong>
+                </div>
+                <form method="get" class="mb-2">
+                    <select name="periode" onchange="this.form.submit()" class="form-select" style="width:200px;display:inline-block;">
+                        <option value="harian" <?= $periode == 'harian' ? 'selected' : '' ?>>Per Hari</option>
+                        <option value="mingguan" <?= $periode == 'mingguan' ? 'selected' : '' ?>>Per Minggu</option>
+                        <option value="bulanan" <?= $periode == 'bulanan' ? 'selected' : '' ?>>Per Bulan</option>
+                    </select>
+                </form>
+                <canvas id="revenueChart" style="max-width:400px;max-height:250px;"></canvas>
+            </div>
+            <div class="chart-container" style="flex: 1; text-align:center;">
+                <h4>Perbandingan Modal & Margin</h4>
+                <canvas id="pieChart" style="max-width:250px;max-height:250px;margin:auto;"></canvas>
+                <div style="margin-top:10px;">
+                    <span style="color:#2196f3;">●</span> Modal: <b>Rp <?= number_format($total_modal, 0, ',', '.') ?></b><br>
+                    <span style="color:#ff9800;">●</span> Margin: <b>Rp <?= number_format($total_margin, 0, ',', '.') ?></b>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -494,6 +530,38 @@ if ($periode == 'mingguan') {
                 scales: {
                     y: {
                         beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Pie/Doughnut Chart untuk Modal & Margin
+        var pieCtx = document.getElementById('pieChart').getContext('2d');
+        var pieChart = new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Modal', 'Margin'],
+                datasets: [{
+                    data: [<?= $total_modal ?>, <?= $total_margin ?>],
+                    backgroundColor: ['#2196f3', '#ff9800'],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                var label = tooltipItem.label || '';
+                                var value = tooltipItem.raw || 0;
+                                var formattedValue = 'Rp ' + value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                                return label + ': ' + formattedValue;
+                            }
+                        }
                     }
                 }
             }
