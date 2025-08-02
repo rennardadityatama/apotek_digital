@@ -35,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($stmt->execute()) {
         session_destroy(); // Hapus session setelah reset berhasil
-    
+
         // Redirect ke halaman login
         header("Location: ../auth/login.php");
         exit;
@@ -43,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo "<script>
                 Swal.fire('Error!', 'Gagal mengubah password: " . $stmt->error . "', 'error');
               </script>";
-    }  
+    }
 
     $stmt->close();
     $conn->close();
@@ -64,24 +64,66 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
-<body class="flex items-center justify-center min-h-screen bg-green-500">
-    <div class="bg-white p-8 rounded-2xl shadow-lg w-[32rem] text-center flex flex-col items-center space-y-6">
-        <!-- Logo dan Judul -->
-        <div class="flex flex-col items-center">
-            <div class="flex items-center justify-center mb-3">
-                <div class="bg-green-500 text-white text-2xl font-bold w-12 h-12 flex items-center justify-center rounded-lg">B</div>
-                <span class="text-green-500 text-2xl font-semibold ml-2">atokMart</span>
+<body class="bg-[#dbeafe] flex items-center justify-center min-h-screen">
+    <div class="w-[900px] h-[550px] bg-white shadow-lg rounded-xl overflow-hidden flex">
+        <!-- Left: Form -->
+        <div class="w-1/2 bg-white flex flex-col justify-center px-10">
+            <div class="mb-6">
+                <h1 class="text-3xl font-bold text-gray-800">Batok<span class="text-yellow-400">Mart</span></h1>
             </div>
-            <h2 class="text-gray-700 text-lg font-semibold">Silahkan Isi Password Baru!!</h2>
+
+            <form action="" method="POST" class="space-y-5">
+                <div>
+                    <label class="block text-gray-600 mb-1">Password</label>
+                    <div class="relative">
+                        <input type="password" name="password" id="password" placeholder="Enter your new Password"
+                            class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" required>
+                        <i id="togglePassword" class="fa fa-eye-slash cursor-pointer absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-gray-600 mb-1">Confirm Password</label>
+                    <div class="relative">
+                        <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm new your Password"
+                            class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" required>
+                        <i id="toggleConfirmPassword" class="fa fa-eye-slash cursor-pointer absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+                <button type="submit" name="type" value="login"
+                    class="w-full bg-gray-800 text-white py-2 rounded-md hover:bg-gray-900 transition">Reset Password</button>
+            </form>
         </div>
 
-        <!-- Form Login -->
-        <form action="" method="POST" class="w-full flex flex-col items-center space-y-4">
-            <input type="text" name="password" placeholder="Password" class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
-            <input type="text" name="confirm_password" placeholder="Confirm Password" class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
-            <button type="submit" name="type" value="login" class="w-full bg-green-500 text-white font-semibold p-3 rounded-md hover:bg-green-600 transition">Reset</button>
-        </form>
+        <!-- Right: Image -->
+        <div class="w-1/2 relative">
+            <img src="../assets/img/login_image.jpg" alt="Login Image" class="w-full h-full object-cover" />
+            <div class="absolute inset-0 bg-white bg-opacity-20"></div>
+        </div>
     </div>
+
+    <script>
+        // Toggle untuk password utama
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        togglePassword.addEventListener('click', function() {
+            const isHidden = passwordInput.type === 'password';
+            passwordInput.type = isHidden ? 'text' : 'password';
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+
+        // Toggle untuk confirm password
+        const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+
+        toggleConfirmPassword.addEventListener('click', function() {
+            const isHidden = confirmPasswordInput.type === 'password';
+            confirmPasswordInput.type = isHidden ? 'text' : 'password';
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    </script>
 </body>
 
 </html>

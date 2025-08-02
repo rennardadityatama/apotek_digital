@@ -25,9 +25,11 @@ $limit = 10;
 $offset = ($page - 1) * $limit;
 
 // Build WHERE clause
+$filter_day = isset($_GET['day']) ? intval($_GET['day']) : 0;
+
 $where = "YEAR(t.date) = $filter_year";
 if ($filter_month) $where .= " AND MONTH(t.date) = $filter_month";
-if ($filter_week) $where .= " AND WEEK(t.date, 1) = $filter_week";
+if ($filter_day) $where .= " AND DAY(t.date) = $filter_day";
 
 // Hitung total data
 $countQuery = "
@@ -38,6 +40,60 @@ $countQuery = "
 $countResult = $conn->query($countQuery);
 $totalRows = $countResult->fetch_assoc()['total'] ?? 0;
 $totalPages = ceil($totalRows / $limit);
+
+function getWeeksInMonth($year, $month)
+{
+    $weeks = [];
+    $start = new DateTime("$year-$month-01");
+    $end = clone $start;
+    $end->modify('last day of this month');
+    $week = 1;
+    $current = clone $start;
+
+    // Minggu pertama: dari tanggal 1 sampai Minggu pertama
+    $firstSunday = clone $current;
+    $firstSunday->modify('next sunday');
+    if ($firstSunday > $end) $firstSunday = clone $end;
+    $weeks[$week] = "Minggu $week";
+    $week++;
+    $current = $firstSunday;
+    $current->modify('+1 day');
+
+    // Minggu berikutnya: Senin-Minggu
+    while ($current <= $end) {
+        $weeks[$week] = "Minggu $week";
+        $current->modify('next sunday');
+        if ($current > $end) break;
+        $week++;
+        $current->modify('+1 day');
+    }
+    return $weeks;
+}
+
+function getWeekRange($year, $month, $week)
+{
+    $start = new DateTime("$year-$month-01");
+    // Minggu ke-1: tanggal 1 sampai Minggu pertama
+    if ($week == 1) {
+        $weekStart = clone $start;
+        $weekEnd = clone $start;
+        $weekEnd->modify('next sunday');
+        $lastDay = new DateTime("$year-$month-01");
+        $lastDay->modify('last day of this month');
+        if ($weekEnd > $lastDay) $weekEnd = $lastDay;
+    } else {
+        // Minggu ke-N: Senin setelah minggu sebelumnya sampai Minggu berikutnya
+        $weekStart = clone $start;
+        $weekStart->modify('next sunday');
+        $weekStart->modify('+' . ($week - 2) . ' week');
+        $weekEnd = clone $weekStart;
+        $weekEnd->modify('next sunday');
+        $lastDay = new DateTime("$year-$month-01");
+        $lastDay->modify('last day of this month');
+        if ($weekEnd > $lastDay) $weekEnd = $lastDay;
+    }
+    return [$weekStart->format('Y-m-d'), $weekEnd->format('Y-m-d')];
+}
 
 // Query transaksi + join detail
 $query = "
@@ -397,22 +453,27 @@ while ($row = $result->fetch_assoc()) {
 
             <!-- Filter Form -->
             <form method="GET" class="mb-3 d-flex gap-2 align-items-center">
-                <select name="year" class="form-select form-select-sm" style="width:100px;">
+                <select name="year" class="form-select form-select-sm" style="width:100px;" onchange="this.form.submit()">
                     <?php for ($y = date('Y'); $y >= date('Y') - 5; $y--): ?>
                         <option value="<?= $y ?>" <?= $filter_year == $y ? 'selected' : '' ?>><?= $y ?></option>
                     <?php endfor; ?>
                 </select>
-                <select name="month" class="form-select form-select-sm" style="width:100px;">
+                <select name="month" class="form-select form-select-sm" style="width:100px;" onchange="this.form.submit()">
                     <option value="0">Bulan</option>
                     <?php for ($m = 1; $m <= 12; $m++): ?>
                         <option value="<?= $m ?>" <?= $filter_month == $m ? 'selected' : '' ?>><?= date('F', mktime(0, 0, 0, $m, 1)) ?></option>
                     <?php endfor; ?>
                 </select>
-                <select name="week" class="form-select form-select-sm" style="width:100px;">
-                    <option value="0">Minggu</option>
-                    <?php for ($w = 1; $w <= 53; $w++): ?>
-                        <option value="<?= $w ?>" <?= $filter_week == $w ? 'selected' : '' ?>>Minggu <?= $w ?></option>
-                    <?php endfor; ?>
+                <select name="day" id="filter-day" class="form-select form-select-sm" style="width:100px;">
+                    <option value="0">Hari</option>
+                    <?php
+                    if ($filter_month) {
+                        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $filter_month, $filter_year);
+                        for ($d = 1; $d <= $daysInMonth; $d++) {
+                            echo '<option value="' . $d . '" ' . ($filter_day == $d ? 'selected' : '') . '>' . $d . '</option>';
+                        }
+                    }
+                    ?>
                 </select>
                 <button type="submit" class="btn btn-primary btn-sm">Filter</button>
             </form>

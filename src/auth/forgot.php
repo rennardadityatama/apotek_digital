@@ -20,7 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email'])) {
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     if ($result->num_rows > 0) {
         $row = $result->fetch_assoc(); // Ambil data email
         $_SESSION['reset_email'] = $row['email']; // Simpan email ke session
@@ -83,23 +83,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email'])) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
-<body class="flex items-center justify-center min-h-screen bg-green-500">
-    <div class="bg-white p-8 rounded-2xl shadow-lg w-[32rem] text-center flex flex-col items-center space-y-6">
-        <!-- Logo dan Judul -->
-        <div class="flex flex-col items-center">
-            <div class="flex items-center justify-center mb-3">
-                <div class="bg-green-500 text-white text-2xl font-bold w-12 h-12 flex items-center justify-center rounded-lg">B</div>
-                <span class="text-green-500 text-2xl font-semibold ml-2">atokMart</span>
+<body class="bg-[#dbeafe] flex items-center justify-center min-h-screen">
+    <div class="w-[900px] h-[550px] bg-white shadow-lg rounded-xl overflow-hidden flex">
+        <!-- Left: Form -->
+        <div class="w-1/2 bg-white flex flex-col justify-center px-10">
+            <div class="mb-6">
+                <h1 class="text-3xl font-bold text-gray-800">Batok<span class="text-yellow-400">Mart</span></h1>
             </div>
-            <h2 class="text-gray-700 text-lg font-semibold">Selamat Datang di BatokMart</h2>
-            <p class="text-gray-500 text-sm">Silahkan masuk terlebih dahulu!</p>
+
+            <form action="" method="POST" class="space-y-5">
+                <div>
+                    <label class="block text-gray-600 mb-1">Email</label>
+                    <div class="relative">
+                        <input type="email" name="email" placeholder="Enter your Email"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" required>
+                        <i class="fa fa-user absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+                <button type="submit" name="type" value="login"
+                    class="w-full bg-gray-800 text-white py-2 rounded-md hover:bg-gray-900 transition">Forgot Password</button>
+            </form>
         </div>
 
-        <!-- Form Login -->
-        <form action="" method="POST" class="w-full flex flex-col items-center space-y-4">
-            <input type="email" name="email" placeholder="Email" class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
-            <button type="submit" name="type" value="login" class="w-full bg-green-500 text-white font-semibold p-3 rounded-md hover:bg-green-600 transition">Forgot</button>
-        </form>
+        <!-- Right: Image -->
+        <div class="w-1/2 relative">
+            <img src="../assets/img/login_image.jpg" alt="Login Image" class="w-full h-full object-cover" />
+            <div class="absolute inset-0 bg-white bg-opacity-20"></div>
+        </div>
     </div>
 
     <?php

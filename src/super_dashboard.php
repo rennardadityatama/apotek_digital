@@ -69,6 +69,22 @@ if ($periode == 'mingguan') {
     $labels = array_reverse($labels);
     $data = array_reverse($data);
     $total_revenue = array_sum($data); // <-- Tambahkan di sini
+} elseif ($periode == 'tahunan') {
+    $tahun_filter = isset($_GET['tahun']) ? intval($_GET['tahun']) : date('Y');
+    // 12 bulan pada tahun yang dipilih
+    $query = "SELECT DATE_FORMAT(date, '%Y-%m') as bulan, SUM(total_price) as total 
+              FROM transactions 
+              WHERE YEAR(date) = $tahun_filter
+              GROUP BY bulan
+              ORDER BY bulan ASC";
+    $result = mysqli_query($conn, $query);
+    $labels = [];
+    $data = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $labels[] = $row['bulan'];
+        $data[] = (int)$row['total'];
+    }
+    $total_revenue = array_sum($data);
 } else {
     // Harian 7 hari terakhir
     $query = "SELECT DATE(date) as tanggal, SUM(total_price) as total 
@@ -459,7 +475,20 @@ if ($periode == 'mingguan') {
                         <option value="harian" <?= $periode == 'harian' ? 'selected' : '' ?>>Per Hari</option>
                         <option value="mingguan" <?= $periode == 'mingguan' ? 'selected' : '' ?>>Per Minggu</option>
                         <option value="bulanan" <?= $periode == 'bulanan' ? 'selected' : '' ?>>Per Bulan</option>
+                        <option value="tahunan" <?= $periode == 'tahunan' ? 'selected' : '' ?>>Per Tahun</option>
                     </select>
+                    <?php if ($periode == 'tahunan'): ?>
+                        <select name="tahun" onchange="this.form.submit()" class="form-select" style="width:120px;display:inline-block;">
+                            <?php
+                            $tahun_sekarang = date('Y');
+                            $tahun_awal = $tahun_sekarang - 5;
+                            $tahun_filter = isset($_GET['tahun']) ? intval($_GET['tahun']) : $tahun_sekarang;
+                            for ($t = $tahun_sekarang; $t >= $tahun_awal; $t--) {
+                                echo '<option value="' . $t . '" ' . ($tahun_filter == $t ? 'selected' : '') . '>' . $t . '</option>';
+                            }
+                            ?>
+                        </select>
+                    <?php endif; ?>
                 </form>
                 <canvas id="revenueChart" style="max-width:400px;max-height:250px;"></canvas>
             </div>

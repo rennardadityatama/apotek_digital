@@ -1,9 +1,11 @@
 <?php
 require "../../service/connection.php";
+session_start();
 
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($id <= 0) {
-    echo "<script>alert('ID member tidak valid'); window.location.href='../../pages/admin/member.php';</script>";
+    $_SESSION['error'] = 'ID member tidak valid';
+    header('Location: ../../pages/admin/member.php');
     exit();
 }
 
@@ -15,12 +17,14 @@ $res = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 if (!$res) {
-    echo "<script>alert('Member tidak ditemukan'); window.location.href='../../pages/admin/member.php';</script>";
+    $_SESSION['error'] = 'Member tidak ditemukan';
+    header('Location: ../../pages/admin/member.php');
     exit();
 }
 
 if ($res['status'] === 'active') {
-    echo "<script>alert('Member yang aktif tidak bisa dihapus!'); window.location.href='../../pages/admin/member.php';</script>";
+    $_SESSION['error'] = 'Member yang aktif tidak bisa dihapus!';
+    header('Location: ../../pages/admin/member.php');
     exit();
 }
 
@@ -28,8 +32,11 @@ if ($res['status'] === 'active') {
 $stmt = $conn->prepare("DELETE FROM member WHERE id = ?");
 $stmt->bind_param("i", $id);
 if ($stmt->execute()) {
-    echo "<script>alert('Data berhasil dihapus'); window.location.href='../../pages/admin/member.php';</script>";
+    $_SESSION['success'] = 'Data berhasil dihapus';
 } else {
-    echo "<script>alert('Gagal menghapus member'); window.location.href='../../pages/admin/member.php';</script>";
+    $_SESSION['error'] = 'Gagal menghapus member';
 }
 $stmt->close();
+
+header('Location: ../../pages/admin/member.php');
+exit();
