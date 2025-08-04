@@ -110,24 +110,24 @@ $total_revenue = array_sum($data);
 
     .sidebar {
       width: 250px;
-      background: white;
+      background: #ffffff;
       padding: 20px;
-      height: 580px;
-      margin-top: 120px;
-      border-radius: 10px;
+      height: 100vh;
       position: fixed;
-      left: 20px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .sidebar.hidden {
-      left: -250px;
+      top: 0;
+      left: 0;
+      border-radius: 0;
+      box-shadow: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      /* jarak antar elemen dalam sidebar */
     }
 
     .sidebar h2 {
       text-align: center;
       color: #4CAF50;
+      margin-top: 20px;
     }
 
     .menu-item a {
@@ -137,7 +137,6 @@ $total_revenue = array_sum($data);
       padding: 10px;
       text-decoration: none;
       color: inherit;
-      border-radius: 5px;
     }
 
     .menu-item i {
@@ -151,29 +150,25 @@ $total_revenue = array_sum($data);
 
     .main-content {
       flex-grow: 1;
-      margin-left: 290px;
+      margin-left: 250px;
       padding: 100px 20px 20px;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .main-content.full-width {
-      margin-left: 40px;
     }
 
     .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: #ffffff;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: white;
-      padding: 15px;
-      width: calc(100% - 40px);
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      height: 60px;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 0 30px;
+      box-shadow: none;
+      border-radius: 0;
       z-index: 1000;
+      border-bottom: 1px solid #ccc;
     }
 
     .header .logo {
@@ -182,15 +177,13 @@ $total_revenue = array_sum($data);
       color: #4CAF50;
     }
 
-    .header .toggle-btn {
-      font-size: 24px;
-      cursor: pointer;
-      color: #4CAF50;
-    }
-
     .profile-container {
       position: relative;
       display: inline-block;
+    }
+
+    .profile-container:hover .dropdown-menu {
+      display: block;
     }
 
     .profile-icon {
@@ -208,22 +201,18 @@ $total_revenue = array_sum($data);
       right: 0;
       top: 50px;
       background: white;
-      padding: 10px;
+      padding: 0;
+      /* buang padding di sini */
       border-radius: 8px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       width: 200px;
-    }
-
-    .dropdown-menu.show {
-      display: block;
+      z-index: 1000;
     }
 
     .dropdown-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #ddd;
+      padding: 10px;
+      padding-left: 12px;
+      /* lebih kiri */
     }
 
     .dropdown-header img {
@@ -272,11 +261,7 @@ $total_revenue = array_sum($data);
 
 <body>
   <div class="header">
-    <div class="toggle-btn" onclick="toggleSidebar()">
-      <i class="fa fa-chevron-left"></i>
-    </div>
-    <div class="logo">BatokMart</div>
-
+    <div class="logo">Healthy Mart</div>
     <!-- Profile Dropdown -->
     <div class="profile-container">
       <i class="fa fa-smile profile-icon" onclick="toggleDropdown()"></i>
@@ -299,20 +284,9 @@ $total_revenue = array_sum($data);
 
   <!-- Tambahkan id="sidebar" -->
   <div class="sidebar" id="sidebar">
-    <h2>BatokMart</h2>
     <div class="menu-item active">
-      <a href="../../dashboard.php" class="menu-link">
+      <a href="./dashboard.php" class="menu-link">
         <i class="fa fa-home"></i> Beranda
-      </a>
-    </div>
-    <div class="menu-item">
-      <a href="pages/kasir/kategori_kasir.php" class="menu-link">
-        <i class="fa fa-list"></i> Data Kategori Produk
-      </a>
-    </div>
-    <div class="menu-item ">
-      <a href="pages/kasir/produk_kasir.php" class="menu-link">
-        <i class="fa fa-box"></i> Data Produk
       </a>
     </div>
     <div class="menu-item">
@@ -374,37 +348,6 @@ $total_revenue = array_sum($data);
 
 
   <script>
-    function toggleSidebar() {
-      var sidebar = document.getElementById('sidebar');
-      var mainContent = document.getElementById('main-content');
-      var toggleIcon = document.querySelector('.toggle-btn i'); // Ambil ikon dari tombol toggle
-
-      if (sidebar.classList.contains('hidden')) {
-        sidebar.classList.remove('hidden');
-        mainContent.classList.remove('full-width');
-        toggleIcon.classList.remove('fa-chevron-right'); // Ganti ikon jadi panah kiri
-        toggleIcon.classList.add('fa-chevron-left');
-      } else {
-        sidebar.classList.add('hidden');
-        mainContent.classList.add('full-width');
-        toggleIcon.classList.remove('fa-chevron-left'); // Ganti ikon jadi panah kanan
-        toggleIcon.classList.add('fa-chevron-right');
-      }
-    }
-
-    function toggleDropdown() {
-      document.getElementById("dropdownMenu").classList.toggle("show");
-    }
-
-    document.addEventListener("click", function(event) {
-      var dropdown = document.getElementById("dropdownMenu");
-      var profileIcon = document.querySelector(".profile-icon");
-
-      if (!dropdown.contains(event.target) && !profileIcon.contains(event.target)) {
-        dropdown.classList.remove("show");
-      }
-    });
-
     var ctx = document.getElementById('revenueChart').getContext('2d');
     var revenueChart = new Chart(ctx, {
       type: 'bar',

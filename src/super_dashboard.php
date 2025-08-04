@@ -127,24 +127,24 @@ if ($periode == 'mingguan') {
 
         .sidebar {
             width: 250px;
-            background: white;
+            background: #ffffff;
             padding: 20px;
-            height: 580px;
-            margin-top: 120px;
-            border-radius: 10px;
+            height: 100vh;
             position: fixed;
-            left: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .sidebar.hidden {
-            left: -250px;
+            top: 0;
+            left: 0;
+            border-radius: 0;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            /* jarak antar elemen dalam sidebar */
         }
 
         .sidebar h2 {
             text-align: center;
             color: #4CAF50;
+            margin-top: 20px;
         }
 
         .menu-item a {
@@ -154,7 +154,6 @@ if ($periode == 'mingguan') {
             padding: 10px;
             text-decoration: none;
             color: inherit;
-            border-radius: 5px;
         }
 
         .menu-item i {
@@ -168,29 +167,25 @@ if ($periode == 'mingguan') {
 
         .main-content {
             flex-grow: 1;
-            margin-left: 290px;
+            margin-left: 250px;
             padding: 100px 20px 20px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .main-content.full-width {
-            margin-left: 40px;
         }
 
         .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: #ffffff;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: white;
-            padding: 15px;
-            width: calc(100% - 40px);
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            height: 60px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 0 30px;
+            box-shadow: none;
+            border-radius: 0;
             z-index: 1000;
+            border-bottom: 1px solid #ccc;
         }
 
         .header .logo {
@@ -199,15 +194,13 @@ if ($periode == 'mingguan') {
             color: #4CAF50;
         }
 
-        .header .toggle-btn {
-            font-size: 24px;
-            cursor: pointer;
-            color: #4CAF50;
-        }
-
         .profile-container {
             position: relative;
             display: inline-block;
+        }
+
+        .profile-container:hover .dropdown-menu {
+            display: block;
         }
 
         .profile-icon {
@@ -225,22 +218,18 @@ if ($periode == 'mingguan') {
             right: 0;
             top: 50px;
             background: white;
-            padding: 10px;
+            padding: 0;
+            /* buang padding di sini */
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             width: 200px;
-        }
-
-        .dropdown-menu.show {
-            display: block;
+            z-index: 1000;
         }
 
         .dropdown-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            padding-left: 12px;
+            /* lebih kiri */
         }
 
         .dropdown-header img {
@@ -284,123 +273,12 @@ if ($periode == 'mingguan') {
             margin-top: 20px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-
-        .cart-icon {
-            font-size: 24px;
-            cursor: pointer;
-            color: #4CAF50;
-            margin-left: 15px;
-        }
-
-        .cart-sidebar {
-            position: fixed;
-            right: -300px;
-            top: 70px;
-            /* Menyesuaikan dengan tinggi header */
-            width: 300px;
-            height: 750px;
-            /* Menghindari overlap dengan header */
-            background: white;
-            box-shadow: -4px 0 6px rgba(0, 0, 0, 0.1);
-            transition: right 0.3s ease-in-out;
-            padding: 16px;
-            overflow-y: auto;
-            z-index: 1000;
-        }
-
-        .cart-sidebar.open {
-            right: 0;
-        }
-
-        .cart-overlay {
-            position: fixed;
-            top: 70px;
-            /* Sama dengan posisi sidebar */
-            left: 0;
-            width: 100%;
-            height: 750px;
-            /* Menyesuaikan agar tidak menutupi header */
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            z-index: 999;
-        }
-
-        .cart-overlay.show {
-            display: block;
-        }
-
-        .cart-sidebar h2 {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
-        }
-
-        .cart-item img {
-            width: 40px;
-            height: 40px;
-            border-radius: 4px;
-            margin-right: 10px;
-        }
-
-        .cart-button {
-            display: flex;
-            align-items: center;
-        }
-
-        .cart-button button {
-            padding: 4px 8px;
-            background: #ddd;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .cart-footer {
-            margin-top: 10px;
-        }
-
-        .cart-footer button {
-            margin-top: 10px;
-            width: 100%;
-            background: #007bff;
-            color: white;
-            padding: 8px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .chart-flex {
-            display: flex;
-            gap: 30px;
-            align-items: flex-start;
-        }
-
-        .chart-container {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
     </style>
 </head>
 
 <body>
     <div class="header">
-        <div class="toggle-btn" onclick="toggleSidebar()">
-            <i class="fa fa-chevron-left"></i>
-        </div>
-        <div class="logo">BatokMart</div>
+        <div class="logo">HealthyMart</div>
 
         <!-- Profile Dropdown -->
         <div class="profile-container">
@@ -431,6 +309,16 @@ if ($periode == 'mingguan') {
             </a>
         </div>
         <div class="menu-item">
+            <a href="./pages/admin/admin.php" class="menu-link">
+                <i class="fa fa-user"></i> Data Admin
+            </a>
+        </div>
+        <div class="menu-item">
+            <a href="./pages/admin/member.php" class="menu-link">
+                <i class="fa fa-users"></i> Data Member
+            </a>
+        </div>
+        <div class="menu-item">
             <a href="./pages/admin/kategori.php" class="menu-link">
                 <i class="fa fa-list"></i> Data Kategori Barang
             </a>
@@ -441,18 +329,8 @@ if ($periode == 'mingguan') {
             </a>
         </div>
         <div class="menu-item">
-            <a href="./pages/admin/member.php" class="menu-link">
-                <i class="fa fa-users"></i> Data Member
-            </a>
-        </div>
-        <div class="menu-item">
-            <a href="./pages/admin/admin.php" class="menu-link">
-                <i class="fa fa-user"></i> Data Admin
-            </a>
-        </div>
-        <div class="menu-item">
             <a href="./pages/admin/laporan.php" class="menu-link">
-                <i class="fa fa-file-alt"></i> Transaksi
+                <i class="fa fa-file-alt"></i> Laporan
             </a>
         </div>
     </div>
@@ -505,42 +383,6 @@ if ($periode == 'mingguan') {
 
 
     <script>
-        function toggleSidebar() {
-            var sidebar = document.getElementById('sidebar');
-            var mainContent = document.getElementById('main-content');
-            var toggleIcon = document.querySelector('.toggle-btn i'); // Ambil ikon dari tombol toggle
-
-            if (sidebar.classList.contains('hidden')) {
-                sidebar.classList.remove('hidden');
-                mainContent.classList.remove('full-width');
-                toggleIcon.classList.remove('fa-chevron-right'); // Ganti ikon jadi panah kiri
-                toggleIcon.classList.add('fa-chevron-left');
-            } else {
-                sidebar.classList.add('hidden');
-                mainContent.classList.add('full-width');
-                toggleIcon.classList.remove('fa-chevron-left'); // Ganti ikon jadi panah kanan
-                toggleIcon.classList.add('fa-chevron-right');
-            }
-        }
-
-        function toggleDropdown() {
-            document.getElementById("dropdownMenu").classList.toggle("show");
-        }
-
-        document.addEventListener("click", function(event) {
-            var dropdown = document.getElementById("dropdownMenu");
-            var profileIcon = document.querySelector(".profile-icon");
-
-            if (!dropdown.contains(event.target) && !profileIcon.contains(event.target)) {
-                dropdown.classList.remove("show");
-            }
-        });
-
-        function toggleCart() {
-            document.querySelector('.cart-sidebar').classList.toggle('open');
-            document.querySelector('.cart-overlay').classList.toggle('show');
-        }
-
         var ctx = document.getElementById('revenueChart').getContext('2d');
         var revenueChart = new Chart(ctx, {
             type: 'bar',

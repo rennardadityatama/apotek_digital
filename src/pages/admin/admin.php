@@ -56,36 +56,24 @@ $admin = mysqli_fetch_assoc($result);
 
         .sidebar {
             width: 250px;
-            background: white;
+            background: #ffffff;
             padding: 20px;
-            height: 580px;
-            top: 100px;
-            /* Sesuaikan dengan tinggi navbar */
-            border-radius: 10px;
+            height: 100vh;
             position: fixed;
-            left: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .sidebar.hidden {
-            left: -250px;
+            top: 0;
+            left: 0;
+            border-radius: 0;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            /* jarak antar elemen dalam sidebar */
         }
 
         .sidebar h2 {
             text-align: center;
             color: #4CAF50;
-        }
-
-        .main-content {
-            flex-grow: 1;
-            margin-left: 290px;
-            padding: 100px 20px 20px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .main-content.full-width {
-            margin-left: 40px;
+            margin-top: 20px;
         }
 
         .menu-item a {
@@ -95,7 +83,6 @@ $admin = mysqli_fetch_assoc($result);
             padding: 10px;
             text-decoration: none;
             color: inherit;
-            border-radius: 5px;
         }
 
         .menu-item i {
@@ -109,29 +96,25 @@ $admin = mysqli_fetch_assoc($result);
 
         .main-content {
             flex-grow: 1;
-            margin-left: 290px;
+            margin-left: 250px;
             padding: 100px 20px 20px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .main-content.full-width {
-            margin-left: 40px;
         }
 
         .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: #ffffff;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: white;
-            padding: 15px;
-            width: calc(100% - 40px);
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            height: 60px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 0 30px;
+            box-shadow: none;
+            border-radius: 0;
             z-index: 1000;
+            border-bottom: 1px solid #ccc;
         }
 
         .header .logo {
@@ -140,15 +123,13 @@ $admin = mysqli_fetch_assoc($result);
             color: #4CAF50;
         }
 
-        .header .toggle-btn {
-            font-size: 24px;
-            cursor: pointer;
-            color: #4CAF50;
-        }
-
         .profile-container {
             position: relative;
             display: inline-block;
+        }
+
+        .profile-container:hover .dropdown-menu {
+            display: block;
         }
 
         .profile-icon {
@@ -166,22 +147,18 @@ $admin = mysqli_fetch_assoc($result);
             right: 0;
             top: 50px;
             background: white;
-            padding: 10px;
+            padding: 0;
+            /* buang padding di sini */
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             width: 200px;
-        }
-
-        .dropdown-menu.show {
-            display: block;
+            z-index: 1000;
         }
 
         .dropdown-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            padding-left: 12px;
+            /* lebih kiri */
         }
 
         .dropdown-header img {
@@ -201,26 +178,6 @@ $admin = mysqli_fetch_assoc($result);
 
         .dropdown-item:hover {
             background: #e0f2f1;
-        }
-
-        .dropdown-item a {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 15px;
-            width: 100%;
-            color: black;
-            text-decoration: none;
-        }
-
-        .dropdown-item.logout a {
-            color: red;
-            font-weight: bold;
-        }
-
-        .dropdown-item a:hover {
-            background: #e0f2f1;
-            border-radius: 5px;
         }
 
         .data-container {
@@ -306,10 +263,7 @@ $admin = mysqli_fetch_assoc($result);
 
 <body>
     <div class="header">
-        <div class="toggle-btn" onclick="toggleSidebar()">
-            <i class="fa fa-chevron-left"></i>
-        </div>
-        <div class="logo">BatokMart</div>
+        <div class="logo">HealthyMart</div>
 
         <div class="profile-container">
             <i class="fa fa-smile profile-icon" onclick="toggleDropdown()"></i>
@@ -338,6 +292,16 @@ $admin = mysqli_fetch_assoc($result);
                 <i class="fa fa-home"></i> Beranda
             </a>
         </div>
+        <div class="menu-item active">
+            <a href="admin.php" class="menu-link">
+                <i class="fa fa-user"></i> Data Admin
+            </a>
+        </div>
+        <div class="menu-item">
+            <a href="member.php" class="menu-link">
+                <i class="fa fa-users"></i> Data Member
+            </a>
+        </div>
         <div class="menu-item">
             <a href="kategori.php" class="menu-link">
                 <i class="fa fa-list"></i> Data Kategori Barang
@@ -346,16 +310,6 @@ $admin = mysqli_fetch_assoc($result);
         <div class="menu-item">
             <a href="produk.php" class="menu-link">
                 <i class="fa fa-box"></i> Data Barang
-            </a>
-        </div>
-        <div class="menu-item">
-            <a href="member.php" class="menu-link">
-                <i class="fa fa-users"></i> Data Member
-            </a>
-        </div>
-        <div class="menu-item active">
-            <a href="admin.php" class="menu-link">
-                <i class="fa fa-user"></i> Data Admin
             </a>
         </div>
         <div class="menu-item">

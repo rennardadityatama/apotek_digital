@@ -48,7 +48,7 @@ if (isset($_GET['delete_id'])) {
     $stmtCheck->execute();
     $resultCheck = $stmtCheck->get_result();
     $product = $resultCheck->fetch_assoc();
-   
+
 
     if (!$product) {
         $_SESSION['error'] = 'Produk tidak ditemukan!';
@@ -264,25 +264,25 @@ if (isset($_POST['save_products'])) {
 
         .sidebar {
             width: 250px;
-            background: white;
+            background: #ffffff;
             padding: 20px;
-            height: 580px;
-            margin-top: 100px;
-            border-radius: 10px;
+            height: 100vh;
             position: fixed;
-            left: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            top: 0;
+            left: 0;
+            border-radius: 0;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            /* jarak antar elemen dalam sidebar */
         }
 
-        .sidebar.hidden {
-            left: -250px;
-        }
-
-        .sidebar h2 {
+        /* .sidebar h2 {
             text-align: center;
             color: #4CAF50;
-        }
+            margin-top: 20px;
+        } */
 
         .menu-item a {
             display: flex;
@@ -291,7 +291,6 @@ if (isset($_POST['save_products'])) {
             padding: 10px;
             text-decoration: none;
             color: inherit;
-            border-radius: 5px;
         }
 
         .menu-item i {
@@ -304,32 +303,26 @@ if (isset($_POST['save_products'])) {
         }
 
         .main-content {
-            min-height: 100vh;
-            /* Pastikan ketinggian minimal 100% viewport */
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
-        }
-
-        .main-content.full-width {
-            margin-left: 40px;
+            flex-grow: 1;
+            margin-left: 250px;
+            padding: 100px 20px 20px;
         }
 
         .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: #ffffff;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: white;
-            padding: 15px;
-            width: calc(100% - 40px);
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            height: 60px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 0 30px;
+            box-shadow: none;
+            border-radius: 0;
             z-index: 1000;
+            border-bottom: 1px solid #ccc;
         }
 
         .header .logo {
@@ -338,15 +331,13 @@ if (isset($_POST['save_products'])) {
             color: #4CAF50;
         }
 
-        .header .toggle-btn {
-            font-size: 24px;
-            cursor: pointer;
-            color: #4CAF50;
-        }
-
         .profile-container {
             position: relative;
             display: inline-block;
+        }
+
+        .profile-container:hover .dropdown-menu {
+            display: block;
         }
 
         .profile-icon {
@@ -364,22 +355,18 @@ if (isset($_POST['save_products'])) {
             right: 0;
             top: 50px;
             background: white;
-            padding: 10px;
+            padding: 0;
+            /* buang padding di sini */
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             width: 200px;
-        }
-
-        .dropdown-menu.show {
-            display: block;
+            z-index: 1000;
         }
 
         .dropdown-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            padding-left: 12px;
+            /* lebih kiri */
         }
 
         .dropdown-header img {
@@ -474,10 +461,7 @@ if (isset($_POST['save_products'])) {
 
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
     <div class="header">
-        <div class="toggle-btn" onclick="toggleSidebar()">
-            <i class="fa fa-chevron-left"></i>
-        </div>
-        <div class="logo">BatokMart</div>
+        <div class="logo">HealthyMart</div>
 
         <div class="profile-container">
             <i class="fa fa-smile profile-icon" onclick="toggleDropdown()"></i>
@@ -507,13 +491,8 @@ if (isset($_POST['save_products'])) {
             </a>
         </div>
         <div class="menu-item">
-            <a href="kategori.php" class="menu-link">
-                <i class="fa fa-list"></i> Data Kategori Barang
-            </a>
-        </div>
-        <div class="menu-item active">
-            <a href="produk.php" class="menu-link">
-                <i class="fa fa-box"></i> Data Barang
+            <a href="admin.php" class="menu-link">
+                <i class="fa fa-user"></i> Data Admin
             </a>
         </div>
         <div class="menu-item">
@@ -522,8 +501,13 @@ if (isset($_POST['save_products'])) {
             </a>
         </div>
         <div class="menu-item">
-            <a href="admin.php" class="menu-link">
-                <i class="fa fa-user"></i> Data Admin
+            <a href="kategori.php" class="menu-link">
+                <i class="fa fa-list"></i> Data Kategori Barang
+            </a>
+        </div>
+        <div class="menu-item active">
+            <a href="produk.php" class="menu-link">
+                <i class="fa fa-box"></i> Data Barang
             </a>
         </div>
         <div class="menu-item">

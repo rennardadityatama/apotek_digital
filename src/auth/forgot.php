@@ -88,7 +88,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email'])) {
         <!-- Left: Form -->
         <div class="w-1/2 bg-white flex flex-col justify-center px-10">
             <div class="mb-6">
-                <h1 class="text-3xl font-bold text-gray-800">Batok<span class="text-yellow-400">Mart</span></h1>
+                <h1 class="text-3xl font-bold text-gray-800">Healthy<span class="text-green-400">Mart</span></h1>
             </div>
 
             <form action="" method="POST" class="space-y-5">
@@ -96,7 +96,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email'])) {
                     <label class="block text-gray-600 mb-1">Email</label>
                     <div class="relative">
                         <input type="email" name="email" placeholder="Enter your Email"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" required>
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" required>
                         <i class="fa fa-user absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                     </div>
                 </div>
@@ -107,7 +107,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email'])) {
 
         <!-- Right: Image -->
         <div class="w-1/2 relative">
-            <img src="../assets/img/login_image.jpg" alt="Login Image" class="w-full h-full object-cover" />
+            <img src="../assets/log_img.jpg" alt="Login Image" class="w-full h-full object-cover" />
             <div class="absolute inset-0 bg-white bg-opacity-20"></div>
         </div>
     </div>
