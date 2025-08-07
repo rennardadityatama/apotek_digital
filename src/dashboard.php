@@ -99,6 +99,11 @@ $total_revenue = array_sum($data);
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -178,61 +183,47 @@ $total_revenue = array_sum($data);
       color: #4CAF50;
     }
 
-    .profile-container {
-      position: relative;
-      display: inline-block;
-    }
-
-    .profile-container:hover .dropdown-menu {
-      display: block;
-    }
-
-    .profile-icon {
-      font-size: 24px;
-      cursor: pointer;
-      color: #4CAF50;
-      background: #e0f2f1;
+    .profile-avatar {
+      width: 45px;
+      height: 45px;
+      object-fit: cover;
       border-radius: 50%;
-      padding: 10px;
-    }
-
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      right: 0;
-      top: 50px;
-      background: white;
-      padding: 0;
-      /* buang padding di sini */
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      width: 200px;
-      z-index: 1000;
-    }
-
-    .dropdown-header {
-      padding: 10px;
-      padding-left: 12px;
-      /* lebih kiri */
-    }
-
-    .dropdown-header img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-    }
-
-    .dropdown-item {
-      padding: 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
       cursor: pointer;
-      border-radius: 5px;
+      border: 2px solid #4CAF50;
+      transition: transform 0.2s ease;
     }
 
-    .dropdown-item:hover {
-      background: #e0f2f1;
+    .profile-avatar:hover {
+      transform: scale(1.05);
+    }
+
+    .profile-header {
+      cursor: pointer;
+    }
+
+    .modal-content {
+      transition: all 0.4s ease-in-out;
+    }
+
+    .modal-dialog {
+      animation: popIn 0.3s ease;
+    }
+
+    @keyframes popIn {
+      0% {
+        transform: scale(0.95);
+        opacity: 0;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .modal-header h5 {
+      font-weight: 600;
+      font-size: 18px;
     }
 
     .stats-container {
@@ -265,19 +256,15 @@ $total_revenue = array_sum($data);
     <div class="logo">Healthy Mart</div>
     <!-- Profile Dropdown -->
     <div class="profile-container">
-      <i class="fa fa-smile profile-icon" onclick="toggleDropdown()"></i>
-      <div class="dropdown-menu" id="dropdownMenu">
-        <div class="dropdown-header">
-          <img src="./assets/img/admin/<?= $admin['image']; ?>" alt="User Image" id="userImage">
-          <div>
-            <strong id="username"><?= $admin['username']; ?></strong>
-            <p id="email" style="font-size: 12px; margin: 0;"><?= $admin['email']; ?></p>
-          </div>
-        </div>
-        <div class="dropdown-item logout">
-          <a href="./auth/logout.php">
-            <i class="fa fa-sign-out-alt"></i> Logout
-          </a>
+      <div class="d-flex align-items-center gap-2 profile-header">
+        <img src="./assets/img/admin/<?= $admin['image']; ?>"
+          alt="Profile Picture"
+          class="profile-avatar"
+          data-bs-toggle="modal"
+          data-bs-target="#profileModal">
+        <div class="d-none d-md-block">
+          <div style="font-size: 13px; font-weight: 600;"><?= $admin['username']; ?></div>
+          <div class="badge bg-secondary" style="font-size: 11px;">Role: <?= $admin['role'] ?? 'Admin' ?></div>
         </div>
       </div>
     </div>
@@ -342,6 +329,33 @@ $total_revenue = array_sum($data);
         <div style="margin-top:10px;">
           <span style="color:#2196f3;">●</span> Modal: <b>Rp <?= number_format($total_modal, 0, ',', '.') ?></b><br>
           <span style="color:#ff9800;">●</span> Margin: <b>Rp <?= number_format($total_margin, 0, ',', '.') ?></b>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content shadow-sm border-0 rounded-4">
+        <div class="modal-header border-0" style="background: linear-gradient(135deg, #43cea2, #185a9d); color: white; border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+          <h5 class="modal-title" id="profileModalLabel">👤 Profil Admin</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-start px-4 pt-4 pb-2">
+          <div class="d-flex align-items-center gap-3">
+            <img src="./assets/img/admin/<?= $admin['image']; ?>" alt="Foto Profil" class="rounded-circle shadow" width="80" height="80">
+            <div>
+              <h6 class="mb-0 fw-semibold text-dark"><?= $admin['username']; ?></h6>
+              <small class="text-muted"><?= $admin['email']; ?></small><br>
+              <span class="badge bg-secondary mt-1">Role: <?= $admin['role'] ?? 'Admin' ?></span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 justify-content-end px-4 pb-4">
+          <a href="./auth/logout.php" class="btn btn-outline-danger btn-sm">
+            <i class="fa fa-sign-out-alt me-1"></i> Logout
+          </a>
         </div>
       </div>
     </div>
