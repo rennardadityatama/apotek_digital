@@ -114,6 +114,7 @@ $total_revenue = array_sum($data);
       padding: 20px;
       height: 100vh;
       position: fixed;
+      margin-top: 60px;
       top: 0;
       left: 0;
       border-radius: 0;

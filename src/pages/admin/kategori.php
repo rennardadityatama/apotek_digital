@@ -19,6 +19,13 @@ $admin = $result->fetch_assoc();
 if (isset($_GET['delete_id'])) {
     $delete_id = intval($_GET['delete_id']);
 
+    // Ambil nama gambar sebelum hapus
+    $getImg = $conn->prepare("SELECT image FROM category WHERE id = ?");
+    $getImg->bind_param("i", $delete_id);
+    $getImg->execute();
+    $imgResult = $getImg->get_result()->fetch_assoc();
+    $getImg->close();
+
     // Cek produk terkait
     $cekProduk = $conn->prepare("SELECT COUNT(*) as total FROM products WHERE fid_kategori = ?");
     $cekProduk->bind_param("i", $delete_id);
@@ -39,6 +46,10 @@ if (isset($_GET['delete_id'])) {
     $del = $conn->prepare("DELETE FROM category WHERE id = ?");
     $del->bind_param("i", $delete_id);
     if ($del->execute()) {
+        // Hapus gambar dari folder jika ada
+        if (!empty($imgResult['image']) && file_exists("../../assets/img/kategori/" . $imgResult['image'])) {
+            unlink("../../assets/img/kategori/" . $imgResult['image']);
+        }
         $_SESSION['swal'] = [
             'icon' => 'success',
             'title' => 'Berhasil!',
@@ -60,6 +71,14 @@ if (isset($_POST['save_category'])) {
     $category = htmlspecialchars(trim($_POST['category']), ENT_QUOTES, 'UTF-8');
     $id = isset($_POST['id']) ? $_POST['id'] : null;
 
+    // Proses upload gambar
+    $imageName = '';
+    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+        $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+        $imageName = mt_rand(10000000, 99999999) . '.' . $ext;
+        move_uploaded_file($_FILES['image']['tmp_name'], "../../assets/img/category/" . $imageName);
+    }
+
     if (empty($id)) {
         // Cek duplikat
         $check = $conn->prepare("SELECT id FROM category WHERE category = ?");
@@ -75,9 +94,9 @@ if (isset($_POST['save_category'])) {
             header("Location: kategori.php");
             exit();
         }
-        $sql = "INSERT INTO category (category) VALUES (?)";
+        $sql = "INSERT INTO category (category, image) VALUES (?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $category);
+        $stmt->bind_param("ss", $category, $imageName);
         $stmt->execute();
         $_SESSION['swal'] = [
             'icon' => 'success',
@@ -101,9 +120,26 @@ if (isset($_POST['save_category'])) {
             header("Location: kategori.php");
             exit();
         }
-        $sql = "UPDATE category SET category = ? WHERE id = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("si", $category, $id);
+
+        // Jika ada gambar baru, hapus gambar lama
+        if (!empty($imageName)) {
+            $getImg = $conn->prepare("SELECT image FROM category WHERE id = ?");
+            $getImg->bind_param("i", $id);
+            $getImg->execute();
+            $imgResult = $getImg->get_result()->fetch_assoc();
+            $getImg->close();
+            if (!empty($imgResult['image']) && file_exists("../../assets/img/category/" . $imgResult['image'])) {
+                unlink("../../assets/img/category/" . $imgResult['image']);
+            }
+            $sql = "UPDATE category SET category = ?, image = ? WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ssi", $category, $imageName, $id);
+        } else {
+            $sql = "UPDATE category SET category = ? WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("si", $category, $id);
+        }
+
         if ($stmt->execute()) {
             $_SESSION['swal'] = [
                 'icon' => 'success',
@@ -412,38 +448,52 @@ if (isset($_POST['save_category'])) {
                 </button>
             </div>
 
-            <div class="row mt-3 g-3">
-                <?php
-                $query = "SELECT * FROM category";
-                $result = mysqli_query($conn, $query);
-                ?>
-
-                <?php while ($row = mysqli_fetch_assoc($result)) : ?>
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                        <div class="card text-white h-100 shadow-sm" style="border-radius: 12px; background-color: #6c757d;">
-                            <div class="card-body p-2 text-center text-dark d-flex flex-column justify-content-between">
-                                <h6 class="mb-2" style="font-size: 0.9rem;"><?= htmlspecialchars($row["category"]); ?></h6>
-
-                                <div class="d-flex justify-content-center gap-2">
+            <div class="table-responsive mt-3">
+                <table class="table table-bordered table-striped align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 60px;">No</th>
+                            <th>Nama Kategori</th>
+                            <th>Gambar</th>
+                            <th style="width: 120px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $query = "SELECT * FROM category";
+                        $result = mysqli_query($conn, $query);
+                        $no = 1;
+                        ?>
+                        <?php while ($row = mysqli_fetch_assoc($result)) : ?>
+                            <tr>
+                                <td><?= $no++; ?></td>
+                                <td><?= htmlspecialchars($row["category"]); ?></td>
+                                <td>
+                                    <?php if (!empty($row["image"])): ?>
+                                        <img src="../../assets/img/category/<?= htmlspecialchars($row["image"]); ?>" alt="Gambar" style="width:60px; height:60px; object-fit:cover;">
+                                    <?php else: ?>
+                                        <span class="text-muted">-</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
                                     <button class="btn btn-warning btn-sm editKategori"
                                         data-id="<?= $row['id']; ?>"
                                         data-category="<?= htmlspecialchars($row['category']); ?>"
+                                        data-image="<?= htmlspecialchars($row['image']); ?>"
                                         title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <a href="../../activities/admin/delete_category.php?id=<?= $row['id']; ?>"
-                                        class="btn btn-danger btn-sm"
-                                        onclick="return confirm('Yakin ingin menghapus kategori ini?')"
+                                    <a href="kategori.php?delete_id=<?= $row['id']; ?>"
+                                        class="btn btn-danger btn-sm btn-hapus"
                                         title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                <?php endwhile; ?>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
             </div>
-
         </div>
     </div>
 
@@ -464,6 +514,13 @@ if (isset($_POST['save_category'])) {
                             <label for="namaKategori" class="form-label">Nama Kategori</label>
                             <input type="text" name="category" class="form-control" id="namaKategori" placeholder="Masukkan nama kategori">
                         </div>
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Gambar Kategori</label>
+                            <input type="file" name="image" class="form-control" id="image" accept="image/*">
+                            <div id="previewGambar" style="margin-top:10px;">
+                                <!-- Preview gambar lama akan muncul di sini -->
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -475,23 +532,6 @@ if (isset($_POST['save_category'])) {
     </div>
 
     <script>
-        function toggleSidebar() {
-            var sidebar = document.getElementById('sidebar');
-            var mainContent = document.getElementById('main-content');
-            var toggleIcon = document.querySelector('.toggle-btn i');
-            if (sidebar.classList.contains('hidden')) {
-                sidebar.classList.remove('hidden');
-                mainContent.classList.remove('full-width');
-                toggleIcon.classList.remove('fa-chevron-right');
-                toggleIcon.classList.add('fa-chevron-left');
-            } else {
-                sidebar.classList.add('hidden');
-                mainContent.classList.add('full-width');
-                toggleIcon.classList.remove('fa-chevron-left');
-                toggleIcon.classList.add('fa-chevron-right');
-            }
-        }
-
         document.addEventListener("DOMContentLoaded", function() {
             const editBtns = document.querySelectorAll(".editKategori");
             const kategoriModal = new bootstrap.Modal(document.getElementById("kategoriModal"));
@@ -515,16 +555,48 @@ if (isset($_POST['save_category'])) {
             });
         });
 
-        function toggleDropdown() {
-            document.getElementById("dropdownMenu").classList.toggle("show");
-        }
+        document.addEventListener("DOMContentLoaded", function() {
+            const editBtns = document.querySelectorAll(".editKategori");
+            const kategoriModal = new bootstrap.Modal(document.getElementById("kategoriModal"));
+            const idInput = document.getElementById("kategoriId");
+            const namaInput = document.getElementById("namaKategori");
+            const modalLabel = document.getElementById("modalLabel");
+            const previewGambar = document.getElementById("previewGambar");
 
-        document.addEventListener("click", function(event) {
-            var dropdown = document.getElementById("dropdownMenu");
-            var profileIcon = document.querySelector(".profile-icon");
-            if (!dropdown.contains(event.target) && !profileIcon.contains(event.target)) {
-                dropdown.classList.remove("show");
-            }
+            editBtns.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    idInput.value = btn.dataset.id;
+                    namaInput.value = btn.dataset.category;
+                    modalLabel.innerHTML = '<i class="fas fa-edit"></i> Edit Kategori';
+
+                    // Tampilkan gambar lama jika ada
+                    if (btn.dataset.image) {
+                        previewGambar.innerHTML = `<img src="../../assets/img/category/${btn.dataset.image}" alt="Preview" style="max-width:120px;max-height:120px;border-radius:8px;">`;
+                    } else {
+                        previewGambar.innerHTML = `<span class="text-muted">Tidak ada gambar</span>`;
+                    }
+
+                    kategoriModal.show();
+                });
+            });
+
+            document.getElementById("kategoriModal").addEventListener("hidden.bs.modal", () => {
+                idInput.value = '';
+                namaInput.value = '';
+                modalLabel.innerHTML = '<i class="fas fa-folder-plus"></i> Tambah Kategori';
+                previewGambar.innerHTML = '';
+            });
+
+            // Preview gambar baru saat upload
+            document.getElementById("image").addEventListener("change", function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        previewGambar.innerHTML = `<img src="${ev.target.result}" alt="Preview" style="max-width:120px;max-height:120px;border-radius:8px;">`;
+                    }
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
         });
 
         <?php if (isset($_SESSION['swal'])): ?>
