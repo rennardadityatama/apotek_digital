@@ -136,6 +136,7 @@ function login()
             $_SESSION['is_auth'] = true;
             $_SESSION['id'] = $user['id'];
             $_SESSION['level'] = $user['level'];
+            $_SESSION['image'] = $user['image'] ?? NULL ;
 
             // Arahkan berdasarkan level
             if ($user['level'] === 'Admin') {

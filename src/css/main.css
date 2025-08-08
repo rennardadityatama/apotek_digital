@@ -1,0 +1,87 @@
+ body {
+     font-family: 'Segoe UI', sans-serif;
+ }
+
+ .sidebar {
+     width: 220px;
+     height: 100vh;
+     position: fixed;
+     background-color: #198754;
+     color: white;
+     padding-top: 20px;
+ }
+
+ .sidebar h2 {
+     text-align: center;
+     font-weight: bold;
+     margin-bottom: 30px;
+ }
+
+ .sidebar a {
+     display: block;
+     padding: 10px 20px;
+     color: white;
+     text-decoration: none;
+ }
+
+ .sidebar a:hover,
+ .sidebar a.active {
+     background-color: #145c37;
+ }
+
+ .header {
+     height: 70px;
+     background-color: #f8f9fa;
+     padding: 10px 30px;
+     margin-left: 220px;
+     display: flex;
+     align-items: center;
+     justify-content: flex-end;
+     border-bottom: 1px solid #dee2e6;
+ }
+
+ .profile-box {
+     display: flex;
+     align-items: center;
+     gap: 10px;
+ }
+
+ .profile-box img {
+     width: 45px;
+     height: 45px;
+     object-fit: cover;
+     border-radius: 50%;
+ }
+
+ .main-content {
+     margin-left: 220px;
+     padding: 30px;
+     background-color: #f1f1f1;
+     min-height: calc(100vh - 70px);
+ }
+
+ .card-profile {
+     max-width: 650px;
+     margin: auto;
+ }
+
+ .profile-input:read-only {
+     background-color: #f8f9fa;
+     border-color: #ced4da;
+ }
+
+ .profile-input.editing {
+     background-color: #fff3cd;
+     border-color: #ffc107;
+ }
+
+ .card-header img {
+     width: 60px;
+     height: 60px;
+     object-fit: cover;
+ }
+
+ .header a {
+     text-decoration: none;
+     color: inherit;
+ }
