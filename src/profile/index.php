@@ -1,7 +1,7 @@
 <?php
 require '../service/connection.php';
 session_start();
-if (!isset($_SESSION['username']) || $_SESSION['level'] != 'Kasir') {
+if (!isset($_SESSION['username'])) {
     header("Location: ../index.php");
     exit();
 }
@@ -14,6 +14,13 @@ if (isset($_SESSION['image'])) {
     $profileImage = "../assets/img/admin/" . $_SESSION['image'];
 } else {
     $profileImage = "../assets/img/admin/default.jpg";
+}
+
+// Tentukan folder gambar berdasarkan role
+if ($role === 'Admin') {
+    $profileImage = "../assets/img/admin/" . $profileImage;
+} else {
+    $profileImage = "../assets/img/kasir/" . $profileImage;
 }
 
 if (isset($_GET['success'])) {
@@ -34,7 +41,7 @@ if (isset($_GET['success'])) {
 
 <head>
     <meta charset="UTF-8">
-    <title>Profil Kasir</title>
+    <title>Profil <?= htmlspecialchars($role) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -50,7 +57,7 @@ if (isset($_GET['success'])) {
         <a href="../pages/kasir/member_kasir.php"><i class="fas fa-user"></i> Data Member</a>
         <a href="../pages/kasir/laporan.php"><i class="fas fa-clipboard"></i> Laporan</a>
         <a href="../pages/kasir/transaksi.php"><i class="fas fa-plus"></i> Transaksi Baru</a>
-        <a class="active" href="profile.php"><i class="fas fa-user-circle"></i> Profil</a>
+        <a class="active" href="../profile/index.php"><i class="fas fa-user-circle"></i> Profil</a>
     </div>
 
     <!-- Header -->
@@ -68,18 +75,18 @@ if (isset($_GET['success'])) {
 
     <!-- Main Content -->
     <div class="main-content">
-        <h1 class="mb-4">Profile Kasir</h1>
+        <h1 class="mb-4">Profil <?= htmlspecialchars($role) ?></h1>
         <div class="card shadow card-profile">
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Profile Kasir</h5>
-                <img src="<?= $profileImage ?>" alt="Foto Profil" class="rounded-circle border border-white">
+                <h5 class="mb-0">Profil <?= htmlspecialchars($role) ?></h5>
+                <img src="<?= $profileImage ?>" alt="Foto Profil" class="rounded-circle border border-white" style="width:60px; height:60px; object-fit:cover;">
             </div>
             <div class="card-body">
                 <form action="update_profile.php" method="POST" id="profileForm">
                     <div class="mb-3">
                         <label class="form-label"><i class="fas fa-user me-2"></i>Username</label>
                         <div class="input-group">
-                            <input type="text" name="username" class="form-control profile-input" value="<?= $username ?>" readonly>
+                            <input type="text" name="username" class="form-control profile-input" value="<?= htmlspecialchars($username) ?>" readonly>
                             <button type="button" class="btn btn-outline-secondary edit-btn">
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
@@ -89,7 +96,7 @@ if (isset($_GET['success'])) {
                     <div class="mb-3">
                         <label class="form-label"><i class="fas fa-envelope me-2"></i>Email</label>
                         <div class="input-group">
-                            <input type="email" name="email" class="form-control profile-input" value="<?= $email ?>" readonly>
+                            <input type="email" name="email" class="form-control profile-input" value="<?= htmlspecialchars($email) ?>" readonly>
                             <button type="button" class="btn btn-outline-secondary edit-btn">
                                 <i class="fas fa-pencil-alt"></i>
                             </button>
@@ -98,7 +105,7 @@ if (isset($_GET['success'])) {
 
                     <div class="mb-3">
                         <label class="form-label"><i class="fas fa-user-tag me-2"></i>Role</label>
-                        <input type="text" class="form-control" value="<?= $role ?>" readonly disabled>
+                        <input type="text" class="form-control" value="<?= htmlspecialchars($role) ?>" readonly disabled>
                     </div>
 
                     <div class="d-flex justify-content-between">
@@ -109,6 +116,7 @@ if (isset($_GET['success'])) {
             </div>
         </div>
     </div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <?php if (!empty($alert)): ?>
