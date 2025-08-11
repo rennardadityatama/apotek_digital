@@ -9,6 +9,15 @@ if (!isset($_SESSION['username'])) {
 }
 
 $username = $_SESSION['username'];
+$email = $_SESSION['email'];
+$role = $_SESSION['level'];
+
+if (isset($_SESSION['image'])) {
+    $profileImage = "../../assets/img/admin/" . $_SESSION['image'];
+} else {
+    $profileImage = "../../assets/img/admin/default.jpg";
+}
+
 $query = "SELECT * FROM admin WHERE username = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("s", $username);
@@ -70,142 +79,9 @@ while ($row = $result->fetch_assoc()) {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <link rel="stylesheet" href="../../css/main.css">
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            background: #f4f6f9;
-        }
-
-        .sidebar {
-            width: 250px;
-            background: #ffffff;
-            padding: 20px;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            border-radius: 0;
-            box-shadow: none;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            /* jarak antar elemen dalam sidebar */
-        }
-
-        /* .sidebar h2 {
-            text-align: center;
-            color: #4CAF50;
-            margin-top: 20px;
-        } */
-
-        .menu-item a {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            padding: 10px;
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .menu-item i {
-            margin-right: 10px;
-        }
-
-        .menu-item a:hover,
-        .menu-item.active a {
-            background: #e0f2f1;
-        }
-
-        .main-content {
-            flex-grow: 1;
-            margin-left: 250px;
-            padding: 100px 20px 20px;
-        }
-
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 60px;
-            background: #ffffff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 30px;
-            box-shadow: none;
-            border-radius: 0;
-            z-index: 1000;
-            border-bottom: 1px solid #ccc;
-        }
-
-        .header .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #4CAF50;
-        }
-
-        .profile-container {
-            position: relative;
-            display: inline-block;
-        }
-
-        .profile-container:hover .dropdown-menu {
-            display: block;
-        }
-
-        .profile-icon {
-            font-size: 24px;
-            cursor: pointer;
-            color: #4CAF50;
-            background: #e0f2f1;
-            border-radius: 50%;
-            padding: 10px;
-        }
-
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 50px;
-            background: white;
-            padding: 0;
-            /* buang padding di sini */
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 200px;
-            z-index: 1000;
-        }
-
-        .dropdown-header {
-            padding: 10px;
-            padding-left: 12px;
-            /* lebih kiri */
-        }
-
-        .dropdown-header img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-        }
-
-        .dropdown-item {
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-
-        .dropdown-item:hover {
-            background: #e0f2f1;
-        }
-
         .data-container {
             background: white;
             padding: 20px;
@@ -278,62 +154,29 @@ while ($row = $result->fetch_assoc()) {
 </head>
 
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>Healthy Mart</h2>
+        <a href="../../super_dashboard.php"><i class="fas fa-home"></i> Beranda</a>
+        <a href="../admin/admin.php"><i class="fas fa-user"></i> Data Kasir</a>
+        <a href="../admin/member.php"><i class="fas fa-users"></i> Data Member</a>
+        <a href="../admin/kategori.php"><i class="fas fa-list"></i> Data Kategori</a>
+        <a href="../admin/produk.php"><i class="fas fa-box"></i> Data Produk</a>
+        <a class="active" href="../admin/laporan.php"><i class="fas fa-clipboard"></i> Laporan</a>
+    </div>
+
+    <!-- Header -->
     <div class="header">
-        <div class="logo">HealthyMart</div>
-        <div class="profile-container">
-            <i class="fa fa-smile profile-icon" onclick="toggleDropdown()"></i>
-            <div class="dropdown-menu" id="dropdownMenu">
-                <div class="dropdown-header">
-                    <img src="../../assets/img/admin/<?= $admin['image']; ?>" alt="User Image" id="userImage">
-                    <div>
-                        <strong id="username"><?= $admin['username']; ?></strong>
-                        <p id="email" style="font-size: 12px; margin: 0;"><?= $admin['email']; ?></p>
-                    </div>
-                </div>
-                <div class="dropdown-item logout">
-                    <a href="../../auth/logout.php">
-                        <i class="fa fa-sign-out-alt"></i> Logout
-                    </a>
+        <a href="../../profile/index.php" style="text-decoration: none; color: inherit;">
+            <div class="profile-box">
+                <img src="<?= $profileImage ?>" alt="Profile">
+                <div>
+                    <?= $username ?><br>
+                    <small>Role: <?= $role ?></small>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
-
-    <!-- Tambahkan id="sidebar" -->
-    <div class="sidebar" id="sidebar">
-        <h2>BatokMart</h2>
-        <div class="menu-item">
-            <a href="../../super_dashboard.php" class="menu-link">
-                <i class="fa fa-home"></i> Beranda
-            </a>
-        </div>
-        <div class="menu-item">
-            <a href="admin.php" class="menu-link">
-                <i class="fa fa-user"></i> Data Admin
-            </a>
-        </div>
-        <div class="menu-item">
-            <a href="member.php" class="menu-link">
-                <i class="fa fa-users"></i> Data Member
-            </a>
-        </div>
-        <div class="menu-item">
-            <a href="kategori.php" class="menu-link">
-                <i class="fa fa-list"></i> Data Kategori Barang
-            </a>
-        </div>
-        <div class="menu-item ">
-            <a href="produk.php" class="menu-link">
-                <i class="fa fa-box"></i> Data Barang
-            </a>
-        </div>
-        <div class="menu-item active">
-            <a href="laporan.php" class="menu-link">
-                <i class="fa fa-file-alt"></i> Laporan
-            </a>
-        </div>
-    </div>
-
 
     <div class="main-content" id="main-content">
         <div class="data-container">

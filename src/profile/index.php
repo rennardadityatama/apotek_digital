@@ -10,17 +10,16 @@ $username = $_SESSION['username'];
 $email = $_SESSION['email'];
 $role = $_SESSION['level'];
 
-if (isset($_SESSION['image'])) {
-    $profileImage = "../assets/img/admin/" . $_SESSION['image'];
+if ($role === 'Admin') {
+    $folder = "../assets/img/admin/";
 } else {
-    $profileImage = "../assets/img/admin/default.jpg";
+    $folder = "../assets/img/admin/";
 }
 
-// Tentukan folder gambar berdasarkan role
-if ($role === 'Admin') {
-    $profileImage = "../assets/img/admin/" . $profileImage;
+if (isset($_SESSION['image'])) {
+    $profileImage = $folder . $_SESSION['image'];
 } else {
-    $profileImage = "../assets/img/kasir/" . $profileImage;
+    $profileImage = $folder . "default.jpg";
 }
 
 if (isset($_GET['success'])) {
@@ -53,11 +52,19 @@ if (isset($_GET['success'])) {
     <!-- Sidebar -->
     <div class="sidebar">
         <h2>Healthy Mart</h2>
-        <a href="../dashboard.php"><i class="fas fa-home"></i> Beranda</a>
-        <a href="../pages/kasir/member_kasir.php"><i class="fas fa-user"></i> Data Member</a>
-        <a href="../pages/kasir/laporan.php"><i class="fas fa-clipboard"></i> Laporan</a>
-        <a href="../pages/kasir/transaksi.php"><i class="fas fa-plus"></i> Transaksi Baru</a>
-        <a class="active" href="../profile/index.php"><i class="fas fa-user-circle"></i> Profil</a>
+        <?php if ($role === 'Admin'): ?>
+            <a href="../super_dashboard.php"><i class="fas fa-home"></i> Beranda</a>
+            <a href="../pages/admin/admin.php"><i class="fas fa-user"></i> Data Kasir</a>
+            <a href="../pages/admin/member.php"><i class="fas fa-users"></i> Data Member</a>
+            <a href="../pages/admin/kategori.php"><i class="fas fa-list"></i> Data Kategori</a>
+            <a href="../pages/admin/produk.php"><i class="fas fa-box"></i> Data Produk</a>
+            <a href="../pages/admin/laporan.php"><i class="fas fa-clipboard"></i> Laporan</a>
+        <?php else: ?>
+            <a href="../dashboard.php"><i class="fas fa-home"></i> Beranda</a>
+            <a href="../pages/kasir/member_kasir.php"><i class="fas fa-user"></i> Data Member</a>
+            <a href="../pages/kasir/laporan.php"><i class="fas fa-clipboard"></i> Laporan</a>
+            <a href="../pages/kasir/transaksi.php"><i class="fas fa-plus"></i> Transaksi Baru</a>
+        <?php endif; ?>
     </div>
 
     <!-- Header -->

@@ -150,7 +150,6 @@ $total_revenue = array_sum($data);
         <a href="pages/kasir/member_kasir.php"><i class="fas fa-user"></i> Data Member</a>
         <a href="pages/kasir/laporan.php"><i class="fas fa-clipboard"></i> Laporan</a>
         <a href="pages/kasir/transaksi.php"><i class="fas fa-plus"></i> Transaksi Baru</a>
-        <a href="profile/index.php"><i class="fas fa-user-circle"></i> Profil</a>
     </div>
 
     <div class="header">

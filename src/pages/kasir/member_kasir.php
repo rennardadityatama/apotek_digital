@@ -62,7 +62,9 @@ $no = 1;
     <link href="../../css/output.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="../../css/main.css">
     <style>
@@ -144,6 +146,39 @@ $no = 1;
             align-items: center;
             margin-bottom: 15px;
         }
+
+        .tag {
+            font-size: 9px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 0.25rem;
+            color: white;
+            display: inline-block;
+            margin-right: 0.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .tag-marketing {
+            background-color: #f97316;
+        }
+
+        .tag-development {
+            background-color: #6366f1;
+        }
+
+        .tag-data {
+            background-color: #3b82f6;
+        }
+
+        .form-control-sm {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .btn-sm {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+        }
     </style>
 </head>
 
@@ -155,7 +190,6 @@ $no = 1;
         <a class="active" href="member_kasir.php"><i class="fas fa-user"></i> Data Member</a>
         <a href="laporan.php"><i class="fas fa-clipboard"></i> Laporan</a>
         <a href="./transaksi.php"><i class="fas fa-plus"></i> Transaksi Baru</a>
-        <a href="../../profile/index.php"><i class="fas fa-user-circle"></i> Profil</a>
     </div>
 
     <div class="header">
@@ -174,8 +208,9 @@ $no = 1;
         <div class="data-container">
             <div class="data-header">
                 <h2>Data Member</h2>
-                <button class="add-button">
-                    <a href="../../activities/admin/add_member.php" style="text-decoration: none; color: white; font-weight: bold;">Tambah Data</a>
+                <!-- Tombol Tambah Data -->
+                <button class="add-button" data-bs-toggle="modal" data-bs-target="#memberModal">
+                    Add Member
                 </button>
             </div>
             <table>
@@ -187,6 +222,7 @@ $no = 1;
                         <th>Points</th>
                         <th>Status</th>
                         <th>Created At</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -204,10 +240,61 @@ $no = 1;
                                 <?php endif; ?>
                             </td>
                             <td><?= htmlspecialchars($row['created_at']); ?></td>
+                            <!-- Tambahkan tombol edit di tabel -->
+                            <td>
+                                <button type="button" class="btn btn-warning btn-sm edit-member"
+                                    data-id="<?= $row['id'] ?>"
+                                    data-name="<?= htmlspecialchars($row['name']) ?>"
+                                    data-phone="<?= htmlspecialchars($row['phone']) ?>"
+                                    data-point="<?= (int)$row['point'] ?>">
+                                    Edit
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm delete-member"
+                                    data-id="<?= $row['id'] ?>"
+                                    data-name="<?= htmlspecialchars($row['name']) ?>">
+                                    Delete
+                                </button>
+                            </td>
                         </tr>
                     <?php endwhile; ?>
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- Modal Tambah/Edit Member -->
+    <div class="modal fade" id="memberModal" tabindex="-1" aria-labelledby="memberModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form class="modal-content" method="post" action="../../activities/admin/add_member.php" id="formMember">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="memberModalLabel">Add Member</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="member_id">
+                    <div class="mb-3">
+                        <label for="member_name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="member_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="member_phone" class="form-label">Phone Number</label>
+                        <input type="text" class="form-control" id="member_phone" name="phone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label"> Status</label>
+                        <input type="text" class="form-control" value="non-active" readonly>
+                        <input type="hidden" name="status" value="non-active">
+                    </div>
+                    <div class="mb-3">
+                        <label for="member_point" class="form-label">Point</label>
+                        <input type="number" class="form-control" id="member_point" name="point" value="0" min="0" readonly>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Simpan</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -219,6 +306,55 @@ $no = 1;
             if (!dropdown.contains(event.target) && !profileIcon.contains(event.target)) {
                 dropdown.classList.remove("show");
             }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tombol tambah member
+            document.querySelector('[data-bs-target="#memberModal"]').addEventListener('click', function() {
+                document.getElementById('memberModalLabel').textContent = 'Add Member';
+                document.getElementById('formMember').reset();
+                document.getElementById('member_id').value = '';
+                document.getElementById('formMember').action = '../../activities/admin/add_member.php';
+                document.getElementById('member_point').value = 0;
+                document.getElementById('member_point').readOnly = true; // tidak bisa diubah
+            });
+
+            // Tombol edit member
+            document.querySelectorAll('.edit-member').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.getElementById('memberModalLabel').textContent = 'Edit Member';
+                    document.getElementById('member_id').value = this.dataset.id;
+                    document.getElementById('member_name').value = this.dataset.name;
+                    document.getElementById('member_phone').value = this.dataset.phone;
+                    document.getElementById('member_point').value = this.dataset.point;
+                    document.getElementById('formMember').action = '../../activities/admin/edit_member.php';
+                    document.getElementById('member_point').readOnly = true; // tetap tidak bisa diubah
+                    var modal = new bootstrap.Modal(document.getElementById('memberModal'));
+                    modal.show();
+                });
+            });
+
+            document.querySelectorAll('.delete-member').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var memberId = this.dataset.id;
+                    var memberName = this.dataset.name;
+                    Swal.fire({
+                        title: 'Hapus Member?',
+                        text: "Yakin ingin menghapus member '" + memberName + "'?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Ya, hapus!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Redirect ke file PHP penghapus member
+                            window.location.href = '../../activities/admin/delete_member.php?id=' + memberId;
+                        }
+                    });
+                });
+            });
         });
     </script>
 

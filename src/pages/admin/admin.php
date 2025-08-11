@@ -43,9 +43,9 @@ $email = $_SESSION['email'];
 $role = $_SESSION['level'];
 
 if (isset($_SESSION['image'])) {
-    $profileImage = "../assets/img/admin/" . $_SESSION['image'];
+    $profileImage = "../../assets/img/admin/" . $_SESSION['image'];
 } else {
-    $profileImage = "../assets/img/admin/default.jpg";
+    $profileImage = "../../assets/img/admin/default.jpg";
 }
 
 $query = "SELECT * FROM admin WHERE username = '$username' ";
@@ -212,7 +212,6 @@ if (isset($_POST['edit_admin'])) {
         <a href="../admin/kategori.php"><i class="fas fa-list"></i> Data Kategori</a>
         <a href="../admin/produk.php"><i class="fas fa-box"></i> Data Produk</a>
         <a href="../admin/laporan.php"><i class="fas fa-clipboard"></i> Laporan</a>
-        <a href="../../profile/index.php"><i class="fas fa-user-circle"></i> Profil</a>
     </div>
 
     <!-- Header -->
@@ -231,7 +230,7 @@ if (isset($_POST['edit_admin'])) {
     <div class="main-content" id="main-content">
         <div class="data-container">
             <div class="data-header">
-                <h2>Data Admin</h2>
+                <h2>Data Kasir</h2>
                 <!-- Tombol tambah -->
                 <button class="add-button" type="button" data-bs-toggle="modal" data-bs-target="#modalTambahAdmin">Tambah Data</button>
             </div>

@@ -9,6 +9,14 @@ if (!isset($_SESSION['username'])) {
 }
 
 $username = $_SESSION['username'];
+$email = $_SESSION['email'];
+$role = $_SESSION['level'];
+
+if (isset($_SESSION['image'])) {
+    $profileImage = "../../assets/img/admin/" . $_SESSION['image'];
+} else {
+    $profileImage = "../../assets/img/admin/default.jpg";
+}
 
 // Prepared statement untuk admin
 $stmt = $conn->prepare("SELECT * FROM admin WHERE username = ?");
@@ -54,143 +62,12 @@ $no = 1;
     <link href="../../css/output.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="../../css/main.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            background: #f4f6f9;
-        }
-
-        .sidebar {
-            width: 250px;
-            background: #ffffff;
-            padding: 20px;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            border-radius: 0;
-            box-shadow: none;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            /* jarak antar elemen dalam sidebar */
-        }
-
-        .sidebar h2 {
-            text-align: center;
-            color: #4CAF50;
-            margin-top: 20px;
-        }
-
-        .menu-item a {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            padding: 10px;
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .menu-item i {
-            margin-right: 10px;
-        }
-
-        .menu-item a:hover,
-        .menu-item.active a {
-            background: #e0f2f1;
-        }
-
-        .main-content {
-            flex-grow: 1;
-            margin-left: 250px;
-            padding: 100px 20px 20px;
-        }
-
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 60px;
-            background: #ffffff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 30px;
-            box-shadow: none;
-            border-radius: 0;
-            z-index: 1000;
-            border-bottom: 1px solid #ccc;
-        }
-
-        .header .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #4CAF50;
-        }
-
-        .profile-container {
-            position: relative;
-            display: inline-block;
-        }
-
-        .profile-container:hover .dropdown-menu {
-            display: block;
-        }
-
-        .profile-icon {
-            font-size: 24px;
-            cursor: pointer;
-            color: #4CAF50;
-            background: #e0f2f1;
-            border-radius: 50%;
-            padding: 10px;
-        }
-
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            right: 0;
-            top: 50px;
-            background: white;
-            padding: 0;
-            /* buang padding di sini */
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 200px;
-            z-index: 1000;
-        }
-
-        .dropdown-header {
-            padding: 10px;
-            padding-left: 12px;
-            /* lebih kiri */
-        }
-
-        .dropdown-header img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-        }
-
-        .dropdown-item {
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-
-        .dropdown-item:hover {
-            background: #e0f2f1;
-        }
-
         .data-container {
             background: white;
             padding: 20px;
@@ -273,69 +150,36 @@ $no = 1;
 </head>
 
 <body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>Healthy Mart</h2>
+        <a href="../../super_dashboard.php"><i class="fas fa-home"></i> Beranda</a>
+        <a href="../admin/admin.php"><i class="fas fa-user"></i> Data Kasir</a>
+        <a class="active" href="../admin/member.php"><i class="fas fa-users"></i> Data Member</a>
+        <a href="../admin/kategori.php"><i class="fas fa-list"></i> Data Kategori</a>
+        <a href="../admin/produk.php"><i class="fas fa-box"></i> Data Produk</a>
+        <a href="../admin/laporan.php"><i class="fas fa-clipboard"></i> Laporan</a>
+    </div>
+
+    <!-- Header -->
     <div class="header">
-        <div class="logo">HealthyMart</div>
-        <div class="profile-container">
-            <i class="fa fa-smile profile-icon" onclick="toggleDropdown()"></i>
-            <div class="dropdown-menu" id="dropdownMenu">
-                <div class="dropdown-header">
-                    <img src="../../assets/img/admin/<?= $admin['image']; ?>" alt="User Image" id="userImage">
-                    <div>
-                        <strong id="username"><?= $admin['username']; ?></strong>
-                        <p id="email" style="font-size: 12px; margin: 0;"><?= $admin['email']; ?></p>
-                    </div>
-                </div>
-                <div class="dropdown-item logout">
-                    <a href="../../auth/logout.php">
-                        <i class="fa fa-sign-out-alt"></i> Logout
-                    </a>
+        <a href="../../profile/index.php" style="text-decoration: none; color: inherit;">
+            <div class="profile-box">
+                <img src="<?= $profileImage ?>" alt="Profile">
+                <div>
+                    <?= $username ?><br>
+                    <small>Role: <?= $role ?></small>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
-
-    <!-- Tambahkan id="sidebar" -->
-    <div class="sidebar" id="sidebar">
-        <h2>BatokMart</h2>
-        <div class="menu-item">
-            <a href="../../super_dashboard.php" class="menu-link">
-                <i class="fa fa-home"></i> Beranda
-            </a>
-        </div>
-        <div class="menu-item">
-            <a href="admin.php" class="menu-link">
-                <i class="fa fa-user"></i> Data Admin
-            </a>
-        </div>
-        <div class="menu-item active">
-            <a href="member.php" class="menu-link">
-                <i class="fa fa-users"></i> Data Member
-            </a>
-        </div>
-        <div class="menu-item">
-            <a href="kategori.php" class="menu-link">
-                <i class="fa fa-list"></i> Data Kategori Barang
-            </a>
-        </div>
-        <div class="menu-item">
-            <a href="produk.php" class="menu-link">
-                <i class="fa fa-box"></i> Data Barang
-            </a>
-        </div>
-        <div class="menu-item">
-            <a href="laporan.php" class="menu-link">
-                <i class="fa fa-file-alt"></i> Laporan
-            </a>
-        </div>
-    </div>
-
 
     <div class="main-content" id="main-content">
         <div class="data-container">
             <div class="data-header">
                 <h2>Data Member</h2>
-                <button class="add-button">
-                    <a href="../../activities/admin/add_member.php" style="text-decoration: none; color: white; font-weight: bold;">Tambah Data</a>
+                <button class="add-button" data-bs-toggle="modal" data-bs-target="#memberModal">
+                    Add Member
                 </button>
             </div>
             <table>
@@ -366,8 +210,21 @@ $no = 1;
                             </td>
                             <td><?= htmlspecialchars($row['created_at']); ?></td>
                             <td>
-                                <a href="../../activities/admin/edit_member.php?id=<?= $row['id']; ?>" class="btn edit">Edit</a>
-                                <a href="../../activities/admin/delete_member.php?id=<?= $row['id']; ?>" class="btn delete" onclick="return confirm('Yakin ingin menghapus member ini?');">Hapus</a>
+                                <a href="<?= $role === 'Admin' ? '../../activities/admin/delete_member.php?id=' . $row['id'] : '../../activities/kasir/delete_member.php?id=' . $row['id'] ?>"
+                                   class="text-danger me-2"
+                                   title="Hapus"
+                                   onclick="return confirm('Yakin ingin menghapus member ini?');">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                                <a href="#"
+                                   class="text-warning edit-member"
+                                   title="Edit"
+                                   data-id="<?= $row['id'] ?>"
+                                   data-name="<?= htmlspecialchars($row['name']) ?>"
+                                   data-phone="<?= htmlspecialchars($row['phone']) ?>"
+                                   data-point="<?= (int)$row['point'] ?>">
+                                    <i class="fas fa-edit"></i>
+                                </a>
                             </td>
                         </tr>
                     <?php endwhile; ?>
@@ -376,36 +233,70 @@ $no = 1;
         </div>
     </div>
 
+    <!-- Modal Tambah/Edit Member -->
+    <div class="modal fade" id="memberModal" tabindex="-1" aria-labelledby="memberModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form class="modal-content" method="post" action="../../activities/admin/add_member.php" id="formMember">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="memberModalLabel">Tambah Member</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="member_id">
+                    <div class="mb-3">
+                        <label for="member_name" class="form-label">Nama</label>
+                        <input type="text" class="form-control" id="member_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="member_phone" class="form-label">No. HP</label>
+                        <input type="text" class="form-control" id="member_phone" name="phone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <input type="text" class="form-control" value="non-active" readonly>
+                        <input type="hidden" name="status" value="non-active">
+                    </div>
+                    <div class="mb-3">
+                        <label for="member_point" class="form-label">Point</label>
+                        <input type="number" class="form-control" id="member_point" name="point" value="0" min="0" readonly>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-success">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function toggleSidebar() {
-            var sidebar = document.getElementById('sidebar');
-            var mainContent = document.getElementById('main-content');
-            var toggleIcon = document.querySelector('.toggle-btn i'); // Ambil ikon dari tombol toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tombol tambah member
+            document.querySelector('[data-bs-target="#memberModal"]').addEventListener('click', function() {
+                document.getElementById('memberModalLabel').textContent = 'Tambah Member';
+                document.getElementById('formMember').reset();
+                document.getElementById('member_id').value = '';
+                document.getElementById('formMember').action = '../../activities/admin/add_member.php';
+                document.getElementById('member_point').value = 0;
+                document.getElementById('member_point').readOnly = true;
+            });
 
-            if (sidebar.classList.contains('hidden')) {
-                sidebar.classList.remove('hidden');
-                mainContent.classList.remove('full-width');
-                toggleIcon.classList.remove('fa-chevron-right'); // Ganti ikon jadi panah kiri
-                toggleIcon.classList.add('fa-chevron-left');
-            } else {
-                sidebar.classList.add('hidden');
-                mainContent.classList.add('full-width');
-                toggleIcon.classList.remove('fa-chevron-left'); // Ganti ikon jadi panah kanan
-                toggleIcon.classList.add('fa-chevron-right');
-            }
-        }
-
-        function toggleDropdown() {
-            document.getElementById("dropdownMenu").classList.toggle("show");
-        }
-
-        document.addEventListener("click", function(event) {
-            var dropdown = document.getElementById("dropdownMenu");
-            var profileIcon = document.querySelector(".profile-icon");
-
-            if (!dropdown.contains(event.target) && !profileIcon.contains(event.target)) {
-                dropdown.classList.remove("show");
-            }
+            // Tombol edit member
+            document.querySelectorAll('.edit-member').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.getElementById('memberModalLabel').textContent = 'Edit Member';
+                    document.getElementById('member_id').value = this.dataset.id;
+                    document.getElementById('member_name').value = this.dataset.name;
+                    document.getElementById('member_phone').value = this.dataset.phone;
+                    document.getElementById('member_point').value = this.dataset.point;
+                    document.getElementById('formMember').action = '../../activities/admin/edit_member.php';
+                    document.getElementById('member_point').readOnly = true;
+                    var modal = new bootstrap.Modal(document.getElementById('memberModal'));
+                    modal.show();
+                });
+            });
         });
     </script>
 

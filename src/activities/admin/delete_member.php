@@ -5,7 +5,7 @@ session_start();
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($id <= 0) {
     $_SESSION['error'] = 'ID member tidak valid';
-    header('Location: ../../pages/admin/member.php');
+    header('Location: ../../pages/kasir/member_kasir.php');
     exit();
 }
 
@@ -18,14 +18,21 @@ $stmt->close();
 
 if (!$res) {
     $_SESSION['error'] = 'Member tidak ditemukan';
-    header('Location: ../../pages/admin/member.php');
+    header('Location: ../../pages/kasir/member_kasir.php');
     exit();
 }
 
 if ($res['status'] === 'active') {
     $_SESSION['error'] = 'Member yang aktif tidak bisa dihapus!';
-    header('Location: ../../pages/admin/member.php');
+    header('Location: ../../pages/kasir/member_kasir.php');
     exit();
+}
+
+$role = $_SESSION['role'];
+if ($role === 'Admin') {
+    $redirectPage = "../../pages/admin/member.php";
+} else {
+    $redirectPage = "../../pages/kasir/member_kasir.php";
 }
 
 // Hapus member jika non-active
@@ -38,5 +45,5 @@ if ($stmt->execute()) {
 }
 $stmt->close();
 
-header('Location: ../../pages/admin/member.php');
+header("Location: $redirectPage");
 exit();

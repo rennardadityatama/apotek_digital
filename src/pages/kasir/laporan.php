@@ -254,7 +254,6 @@ while ($row = $result->fetch_assoc()) {
         <a href="member_kasir.php"><i class="fas fa-user"></i> Data Member</a>
         <a class="active" href="laporan.php"><i class="fas fa-clipboard"></i> Laporan</a>
         <a href="transaksi.php"><i class="fas fa-plus"></i> Transaksi Baru</a>
-        <a href="../../profile/index.php"><i class="fas fa-user-circle"></i> Profil</a>
     </div>
 
     <div class="header">

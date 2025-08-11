@@ -488,19 +488,34 @@ if (isset($_GET['update_cart']) && isset($_GET['id']) && is_numeric($_GET['id'])
         <a href="member_kasir.php"><i class="fas fa-user"></i> Data Member</a>
         <a href="laporan.php"><i class="fas fa-clipboard"></i> Laporan</a>
         <a class="active" href="./transaksi.php"><i class="fas fa-plus"></i> Transaksi Baru</a>
-        <a href="../../profile/index.php"><i class="fas fa-user-circle"></i> Profil</a>
     </div>
 
     <div class="header">
-        <a href="profile/index.php">
-            <div class="profile-box">
-                <img src="<?= $profileImage ?>" alt="Profile">
-                <div>
-                    <?= $username ?><br>
-                    <small>Role: <?= $role ?></small>
+        <div style="display: flex; align-items: center; gap: 18px;">
+            <!-- Icon Kamera -->
+            <button id="btnOpenCamera" type="button" class="btn btn-outline-secondary position-relative" title="Scan Barcode/QR">
+                <i class="fa fa-camera fa-lg"></i>
+            </button>
+            <!-- Icon Keranjang -->
+            <button type="button" class="btn btn-outline-secondary position-relative" title="Lihat Keranjang" onclick="toggleCart()">
+                <i class="fa fa-shopping-cart fa-lg"></i>
+                <?php if ($totalItems > 0): ?>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        <?= $totalItems ?>
+                    </span>
+                <?php endif; ?>
+            </button>
+            <!-- Profile -->
+            <a href="../../profile/index.php" style="text-decoration: none; color: inherit;">
+                <div class="profile-box">
+                    <img src="<?= $profileImage ?>" alt="Profile">
+                    <div>
+                        <?= $username ?><br>
+                        <small>Role: <?= $role ?></small>
+                    </div>
                 </div>
-            </div>
-        </a>
+            </a>
+        </div>
     </div>
 
     <!-- Modal Keranjang -->

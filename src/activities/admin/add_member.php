@@ -5,9 +5,19 @@ require "../../service/utility.php";
 
 date_default_timezone_set('Asia/Jakarta');
 
+// Ambil role dari session
+$role = $_SESSION['level'] ?? 'Kasir'; // default Kasir jika tidak ada
+
 $name = $phone = "";
 $point = 0;
 $status = "non-active"; // Default status tidak bisa diubah
+
+// Tentukan halaman redirect sesuai role
+if ($role === 'Admin') {
+    $redirectPage = "../../pages/admin/member.php";
+} else {
+    $redirectPage = "../../pages/kasir/member_kasir.php";
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $name = trim($_POST['name'] ?? '');
@@ -21,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     mysqli_stmt_store_result($stmt_check);
     if (mysqli_stmt_num_rows($stmt_check) > 0) {
         $_SESSION['error'] = "Nomor telepon sudah terdaftar!";
-        header("Location: " . $_SERVER['PHP_SELF']);
+        header("Location: " . $redirectPage);
         exit();
     }
     mysqli_stmt_close($stmt_check);
@@ -36,11 +46,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (mysqli_stmt_execute($stmt)) {
         $_SESSION['success'] = "Member berhasil ditambahkan!";
-        header("Location: ../../pages/admin/member.php");
+        header("Location: " . $redirectPage);
         exit();
     } else {
         $_SESSION['error'] = "Gagal tambah member: " . mysqli_error($conn);
-        header("Location: " . $_SERVER['PHP_SELF']);
+        header("Location: " . $redirectPage);
         exit();
     }
 }
