@@ -111,6 +111,11 @@ if ($periode == 'mingguan') {
     $data = array_reverse($data);
     $total_revenue = array_sum($data); // Sudah ada di sini
 }
+
+// Query total produk terjual
+$query_sold = "SELECT SUM(quantity) as total_sold FROM transactions_details";
+$result_sold = mysqli_query($conn, $query_sold);
+$total_sold = mysqli_fetch_assoc($result_sold)['total_sold'] ?? 0;
 ?>
 
 <!DOCTYPE html>
@@ -187,6 +192,7 @@ if ($periode == 'mingguan') {
             <div class="stat-box">Data Barang<br><strong><?= $total_products ?></strong></div>
             <div class="stat-box">Data Kategori<br><strong><?= $total_category ?></strong></div>
             <div class="stat-box">Total Transaksi<br><strong><?= $total_transactions ?></strong></div>
+            <div class="stat-box">Produk Terjual<br><strong><?= $total_sold ?></strong></div>
         </div>
         <div class="chart-flex" style="display: flex; gap: 30px; align-items: flex-start;">
             <div class="chart-container" style="flex: 2;">

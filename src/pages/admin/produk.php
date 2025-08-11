@@ -47,6 +47,26 @@ function isProductNameDuplicate($conn, $productName, $excludeId = null)
     return $row['count'] > 0;
 }
 
+// Fungsi cek duplikat barcode
+function isBarcodeDuplicate($conn, $barcode, $excludeId = null)
+{
+    if ($excludeId) {
+        $sql = "SELECT COUNT(*) as count FROM products WHERE barcode = ? AND id != ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("si", $barcode, $excludeId);
+    } else {
+        $sql = "SELECT COUNT(*) as count FROM products WHERE barcode = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $barcode);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
+
+    return $row['count'] > 0;
+}
+
 // === HANDLE DELETE ===
 if (isset($_GET['delete_id'])) {
     $delete_id = (int) $_GET['delete_id'];
@@ -127,6 +147,13 @@ if (isset($_POST['save_products'])) {
             exit();
         }
 
+        // Cek duplikat barcode
+        if ($barcode && isBarcodeDuplicate($conn, $barcode)) {
+            $_SESSION['error'] = 'Barcode sudah digunakan produk lain!';
+            header('Location: produk.php');
+            exit();
+        }
+
         if (!$image['name']) {
             $_SESSION['error'] = 'Gambar wajib diupload saat tambah produk!';
             header('Location: produk.php');
@@ -168,6 +195,13 @@ if (isset($_POST['save_products'])) {
     } else {
         if (isProductNameDuplicate($conn, $product_name, $id)) {
             $_SESSION['error'] = 'Nama produk sudah ada!';
+            header('Location: produk.php');
+            exit();
+        }
+
+        // Cek duplikat barcode (kecuali produk ini sendiri)
+        if ($barcode && isBarcodeDuplicate($conn, $barcode, $id)) {
+            $_SESSION['error'] = 'Barcode sudah digunakan produk lain!';
             header('Location: produk.php');
             exit();
         }

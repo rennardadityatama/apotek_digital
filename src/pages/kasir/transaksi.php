@@ -147,31 +147,23 @@ $totalItems = array_sum($_SESSION['cart']);
 // Ambil member dari session
 $member = $_SESSION['member'] ?? null;
 
-// Proses pencarian member
-$memberSearch = '';
-if (isset($_POST['search_member'])) {
-    $phone_number = $_POST['phone_number'] ?? '';
-    $memberSearch = $phone_number;
-
-    $member_query = "SELECT * FROM member WHERE phone = ?";
-    $stmt = $conn->prepare($member_query);
-    $stmt->bind_param("s", $phone_number);
+$phone = $_GET['phone'] ?? '';
+$data = ['found' => false];
+if ($phone) {
+    $stmt = $conn->prepare("SELECT id, name, phone, point FROM member WHERE phone = ?");
+    $stmt->bind_param("s", $phone);
     $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        $memberData = $result->fetch_assoc();
-        $_SESSION['success'] = "Member ditemukan: " . $memberData['name'];
-        $_SESSION['member'] = $memberData;
-    } else {
-        $_SESSION['error'] = "Member dengan nomor $phone_number tidak ditemukan.";
-        unset($_SESSION['member']);
+    $res = $stmt->get_result()->fetch_assoc();
+    if ($res) {
+        $data = [
+            'found' => true,
+            'id' => $res['id'],
+            'name' => $res['name'],
+            'phone' => $res['phone'],
+            'point' => $res['point']
+        ];
     }
     $stmt->close();
-
-    // Jangan redirect di sini, biarkan halaman reload dengan hasil pencarian
-    // header("Location: transaksi.php");
-    // exit();
 }
 
 // Proses transaksi order
@@ -338,6 +330,7 @@ if (isset($_GET['update_cart']) && isset($_GET['id']) && is_numeric($_GET['id'])
                 $stmt->bind_param("i", $id);
                 $stmt->execute();
                 $stmt->close();
+                $_SESSION['success'] = 'Berhasil menambah quantity produk!';
             }
         } elseif ($_GET['update_cart'] === 'minus') {
             if ($_SESSION['cart'][$id] > 1) {
@@ -347,6 +340,7 @@ if (isset($_GET['update_cart']) && isset($_GET['id']) && is_numeric($_GET['id'])
                 $stmt->bind_param("i", $id);
                 $stmt->execute();
                 $stmt->close();
+                $_SESSION['success'] = 'Berhasil mengurangi quantity produk!';
             } else {
                 // Jika qty 1, hapus dari keranjang dan tambah stok
                 unset($_SESSION['cart'][$id]);
@@ -354,12 +348,36 @@ if (isset($_GET['update_cart']) && isset($_GET['id']) && is_numeric($_GET['id'])
                 $stmt->bind_param("i", $id);
                 $stmt->execute();
                 $stmt->close();
+                $_SESSION['success'] = 'Produk dihapus dari keranjang!';
             }
         }
     }
     header("Location: transaksi.php");
     exit();
 }
+
+// Proses search member via GET (tanpa AJAX, tanpa form)
+if (isset($_GET['search_member_phone'])) {
+    $phone_number = $_GET['search_member_phone'];
+    $member_query = "SELECT * FROM member WHERE phone = ?";
+    $stmt = $conn->prepare($member_query);
+    $stmt->bind_param("s", $phone_number);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $memberData = $result->fetch_assoc();
+        $_SESSION['success'] = "Member ditemukan: " . $memberData['name'];
+        $_SESSION['member'] = $memberData;
+    } else {
+        $_SESSION['member_search_not_found'] = true;
+        unset($_SESSION['member']);
+    }
+    $stmt->close();
+    header("Location: transaksi.php");
+    exit();
+}
+
 ?>
 
 
@@ -477,6 +495,281 @@ if (isset($_GET['update_cart']) && isset($_GET['id']) && is_numeric($_GET['id'])
             height: 100%;
             border-radius: 0;
         }
+
+        .product-card {
+            background-color: #6c757d;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            text-decoration: none;
+            color: white;
+            transition: transform 0.3s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .product-img-full {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+        }
+
+        .product-body {
+            padding: 10px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-name {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .product-price {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .product-stock {
+            font-size: 0.9rem;
+            color: #ddd;
+        }
+
+        .product-card-modern {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(60, 60, 60, 0.10);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.15s, box-shadow 0.15s;
+            border: none;
+            margin-bottom: 18px;
+            position: relative;
+            cursor: pointer;
+            min-height: 290px;
+        }
+
+        .product-card-modern:hover {
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 8px 32px rgba(60, 60, 60, 0.16);
+        }
+
+        .product-img-modern {
+            width: 100%;
+            height: 140px;
+            object-fit: contain;
+            background: #f8f8f8;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .product-body-modern {
+            padding: 16px 12px 12px 12px;
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-start;
+            text-align: left;
+        }
+
+        .product-name-modern {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #007bff;
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+
+        .product-price-modern {
+            font-size: 1.08rem;
+            color: #009688;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .product-stock-modern {
+            font-size: 0.95rem;
+            color: #dc3545;
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 600px) {
+            .product-img-modern {
+                height: 90px;
+            }
+
+            .product-body-modern {
+                padding: 10px 6px 8px 6px;
+            }
+        }
+
+        .btn-group-custom {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-custom {
+            width: auto;
+            padding: 6px 12px;
+        }
+
+        .cart-icon {
+            position: relative;
+            margin-right: 15px;
+        }
+
+        /* Sidebar modal */
+        .modal.modal-side .modal-dialog {
+            position: fixed;
+            top: 0;
+            right: 0;
+            margin: 0;
+            width: 400px;
+            height: 100%;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-out;
+            pointer-events: none;
+        }
+
+        .modal.modal-side.show .modal-dialog {
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        .modal.modal-side .modal-content {
+            height: 100%;
+            border-radius: 0;
+        }
+
+        .product-card {
+            background-color: #6c757d;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            text-decoration: none;
+            color: white;
+            transition: transform 0.3s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .product-img-full {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+        }
+
+        .product-body {
+            padding: 10px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-name {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .product-price {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .product-stock {
+            font-size: 0.9rem;
+            color: #ddd;
+        }
+
+        .product-card-modern {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(60, 60, 60, 0.10);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.15s, box-shadow 0.15s;
+            border: none;
+            margin-bottom: 18px;
+            position: relative;
+            cursor: pointer;
+            min-height: 290px;
+        }
+
+        .product-card-modern:hover {
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 8px 32px rgba(60, 60, 60, 0.16);
+        }
+
+        .product-img-modern {
+            width: 100%;
+            height: 140px;
+            object-fit: contain;
+            background: #f8f8f8;
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .product-body-modern {
+            padding: 16px 12px 12px 12px;
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-start;
+            text-align: left;
+        }
+
+        .product-name-modern {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #007bff;
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+
+        .product-price-modern {
+            font-size: 1.08rem;
+            color: #009688;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .product-stock-modern {
+            font-size: 0.95rem;
+            color: #dc3545;
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 600px) {
+            .product-img-modern {
+                height: 90px;
+            }
+
+            .product-body-modern {
+                padding: 10px 6px 8px 6px;
+            }
+        }
     </style>
 </head>
 
@@ -533,15 +826,28 @@ if (isset($_GET['update_cart']) && isset($_GET['id']) && is_numeric($_GET['id'])
                 <?php endif; ?>
                 <div class="modal-body">
                     <!-- Form Search Member tetap di luar form transaksi -->
-                    <form method="post" action="transaksi.php" class="mt-3">
-                        <div class="mb-3">
-                            <label for="member_search" class="form-label">Cari Member (Opsional)</label>
-                            <div class="input-group">
-                                <input type="text" id="member_search" name="phone_number" class="form-control" placeholder="Masukkan nomor telepon member" value="<?= htmlspecialchars($memberSearch ?? '') ?>">
-                                <button type="submit" name="search_member" class="btn btn-outline-primary">Cari</button>
-                            </div>
+                    <div class="mb-3">
+                        <label for="member_search" class="form-label">Cari Member (Opsional)</label>
+                        <div class="input-group">
+                            <input type="text"
+                                id="member_search"
+                                class="form-control"
+                                placeholder="Masukkan nomor telepon member"
+                                value="<?= htmlspecialchars($member['phone'] ?? '') ?>"
+                                <?= isset($member) && $member ? 'readonly' : '' ?>>
+                            <button class="btn btn-outline-secondary" type="button" id="btn-search-member" <?= isset($member) && $member ? 'disabled' : '' ?>>
+                                <i class="fas fa-search"></i>
+                            </button>
                         </div>
-                    </form>
+                        <div id="member_search_result" class="mt-2">
+                            <?php if (isset($member) && $member): ?>
+                                <span class="text-success">Member ditemukan: <b><?= htmlspecialchars($member['name']) ?></b> (Point: <?= (int)$member['point'] ?>)</span>
+                            <?php elseif (isset($_SESSION['member_search_not_found'])): ?>
+                                <span class="text-danger">Member tidak ditemukan.</span>
+                                <?php unset($_SESSION['member_search_not_found']); ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                     <form id="transactionForm" method="post">
                         <!-- Member Info -->
                         <div class="mt-3 mb-4">
@@ -651,7 +957,7 @@ if (isset($_GET['update_cart']) && isset($_GET['id']) && is_numeric($_GET['id'])
     <div class="main-content" id="main-content">
         <div class="data-container">
             <div class="data-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <h2>Transaksi</h2>
+                <h2>List Product</h2>
                 <div class="d-flex align-items-center gap-2">
                     <a href="transaksi.php" class="btn btn-secondary btn-sm">Semua Produk</a>
                     <form method="GET" action="">
@@ -684,14 +990,18 @@ if (isset($_GET['update_cart']) && isset($_GET['id']) && is_numeric($_GET['id'])
                     $link = "transaksi.php?add_to_cart=" . $row['id'];
                     if ($filterKategori) $link .= "&kategori=$filterKategori";
                 ?>
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                        <a href="<?= $link ?>" style="text-decoration: none;">
-                            <div class="card text-white h-100 shadow-sm" style="border-radius: 12px; background-color: #6c757d;">
-                                <img src="../../assets/img/product/<?= htmlspecialchars($row["image"]); ?>" class="card-img-top" alt="<?= htmlspecialchars($row["product_name"]); ?>" style="width: 100%; height: 100px; object-fit: cover; border-top-left-radius: 12px; border-top-right-radius: 12px;">
-                                <div class="card-body p-2 text-center text-white d-flex flex-column justify-content-between" style="font-size: 0.8rem;">
-                                    <h6 class="mb-1"><?= htmlspecialchars($row["product_name"]); ?></h6>
-                                    <p class="mb-1">Rp. <?= number_format($row["harga_jual"], 2, ',', '.'); ?></p>
-                                    <p class="mb-1">Stok: <?= htmlspecialchars($row["stok"]); ?></p>
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex">
+                        <a href="<?= $link ?>" class="product-card-modern w-100 text-decoration-none" style="color:inherit;">
+                            <img src="../../assets/img/product/<?= htmlspecialchars($row["image"]); ?>"
+                                class="product-img-modern"
+                                alt="<?= htmlspecialchars($row["product_name"]); ?>">
+                            <div class="product-body-modern">
+                                <div class="product-name-modern"><?= htmlspecialchars($row["product_name"]); ?></div>
+                                <div class="product-price-modern">
+                                    Rp. <?= number_format($row["harga_jual"], 2, ',', '.'); ?>
+                                </div>
+                                <div class="product-stock-modern">
+                                    Stok: <?= htmlspecialchars($row["stok"]); ?>
                                 </div>
                             </div>
                         </a>
@@ -777,22 +1087,6 @@ if (isset($_GET['update_cart']) && isset($_GET['id']) && is_numeric($_GET['id'])
                 }, 1000);
             <?php endif; ?>
         });
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('main-content');
-            const icon = document.querySelector('.toggle-btn i');
-
-            sidebar.classList.toggle('hidden');
-            mainContent.classList.toggle('full-width');
-            icon.classList.toggle('fa-chevron-left');
-            icon.classList.toggle('fa-chevron-right');
-        }
-
-        function toggleDropdown() {
-            const menu = document.getElementById("dropdownMenu");
-            menu?.classList.toggle("show");
-        }
 
         function toggleCart() {
             const cartElement = document.getElementById('cartModal');
@@ -924,6 +1218,27 @@ if (isset($_GET['update_cart']) && isset($_GET['id']) && is_numeric($_GET['id'])
                     barcode = '';
                 }, 200); // 200ms: waktu antar karakter scanner fisik
             });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('member_search');
+            const btn = document.getElementById('btn-search-member');
+            if (input && btn && !input.readOnly) {
+                btn.addEventListener('click', function() {
+                    const phone = input.value.trim();
+                    if (phone.length >= 6) {
+                        window.location.href = "transaksi.php?search_member_phone=" + encodeURIComponent(phone);
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Nomor tidak valid',
+                            text: 'Masukkan minimal 6 digit nomor telepon member!',
+                            showConfirmButton: true
+                        });
+                        input.focus();
+                    }
+                });
+            }
         });
     </script>
 
