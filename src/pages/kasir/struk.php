@@ -46,6 +46,14 @@ $potongan = 0;
 if (isset($trans['total_price']) && $total_asli > $trans['total_price']) {
     $potongan = $total_asli - $trans['total_price'];
 }
+
+$role = $_SESSION['level'] ?? 'Kasir'; // default Kasir jika tidak ada
+if ($role === 'Admin') {
+    $backUrl = "../admin/laporan.php";
+} else {
+    $backUrl = "transaksi.php";
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -111,7 +119,7 @@ if (isset($trans['total_price']) && $total_asli > $trans['total_price']) {
                     <a href="../../service/fonte.php?transaction_id=<?= $trans['id'] ?>" class="btn btn-success btn-sm" target="_blank" rel="noopener noreferrer" title="Kirim ke WhatsApp">
                         <i class="fab fa-whatsapp"></i> Kirim WA
                     </a>
-                    <a href="transaksi.php" class="btn btn-outline-dark btn-sm" title="Kembali">
+                    <a href="<?= $backUrl ?>" class="btn btn-outline-dark btn-sm" title="Kembali">
                         <i class="fa fa-arrow-left"></i> Kembali
                     </a>
                 </div>

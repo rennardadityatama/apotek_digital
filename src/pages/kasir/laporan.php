@@ -257,7 +257,7 @@ while ($row = $result->fetch_assoc()) {
     </div>
 
     <div class="header">
-        <a href="profile/index.php">
+        <a href="../../profile/index.php">
             <div class="profile-box">
                 <img src="<?= $profileImage ?>" alt="Profile">
                 <div>
