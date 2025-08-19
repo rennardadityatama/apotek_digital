@@ -116,9 +116,11 @@ if ($role === 'Admin') {
                     <a href="generate_pdf.php?transaction_id=<?= $trans['id'] ?>" class="btn btn-outline-secondary btn-sm" target="_blank" rel="noopener noreferrer">
                         <i class="fa fa-file-pdf me-1"></i> PDF
                     </a>
-                    <a href="../../service/fonte.php?transaction_id=<?= $trans['id'] ?>" class="btn btn-success btn-sm" target="_blank" rel="noopener noreferrer" title="Kirim ke WhatsApp">
-                        <i class="fab fa-whatsapp"></i> Kirim WA
-                    </a>
+                    <?php if (!empty($trans['member_name'])): ?>
+                        <a href="../../service/fonte.php?transaction_id=<?= $trans['id'] ?>" class="btn btn-success btn-sm" target="_blank" rel="noopener noreferrer" title="Kirim ke WhatsApp">
+                            <i class="fab fa-whatsapp"></i> Kirim WA
+                        </a>
+                    <?php endif; ?>
                     <a href="<?= $backUrl ?>" class="btn btn-outline-dark btn-sm" title="Kembali">
                         <i class="fa fa-arrow-left"></i> Kembali
                     </a>
