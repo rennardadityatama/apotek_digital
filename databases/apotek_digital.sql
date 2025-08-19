@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 12, 2025 at 03:18 AM
+-- Generation Time: Aug 19, 2025 at 04:07 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -91,8 +91,7 @@ CREATE TABLE `member` (
 --
 
 INSERT INTO `member` (`id`, `name`, `phone`, `point`, `created_at`, `status`) VALUES
-(19, 'reifan', '082213521461', 88, '2025-08-11 08:51:21', 'non-active'),
-(21, 'Rennard', '08568795015', 3, '2025-08-11 09:35:31', 'active');
+(19, 'reifan', '082213521461', 88, '2025-08-11 08:51:21', 'non-active');
 
 -- --------------------------------------------------------
 
@@ -167,8 +166,7 @@ INSERT INTO `transactions` (`id`, `date`, `fid_admin`, `fid_member`, `detail`, `
 (63, '2025-08-11 04:41:52', 11, 19, 'Panadol Biru x 1', 12000, 'Cash', 3000, 13000.00, 1000.00),
 (64, '2025-08-11 04:46:12', 11, 19, 'Panadol Ga Liat x 1', 2000, 'Cash', 1000, 10000.00, 8000.00),
 (65, '2025-08-11 04:51:34', 11, 19, 'Panadol Biru x 2, Extra Joss Hijau x 2, Panadol Merah x 2, Panadol Ga Liat x 2, Extra Joss Ungu x 2', 62000, 'Cash', 15000, 100000.00, 38000.00),
-(66, '2025-08-11 04:56:55', 11, NULL, 'Panadol Ga Liat x 1', 2000, 'Cash', 1000, 3000.00, 1000.00),
-(67, '2025-08-12 01:03:23', 11, 21, 'Amoxicillin x 1', 3500, 'Cash', 1000, 4000.00, 500.00);
+(66, '2025-08-11 04:56:55', 11, NULL, 'Panadol Ga Liat x 1', 2000, 'Cash', 1000, 3000.00, 1000.00);
 
 -- --------------------------------------------------------
 
@@ -198,8 +196,7 @@ INSERT INTO `transactions_details` (`id`, `fid_transaction`, `fid_product`, `qua
 (6, 65, 38, 2, 6500.00, 13000.00),
 (7, 65, 41, 2, 2000.00, 4000.00),
 (8, 65, 45, 2, 6500.00, 13000.00),
-(9, 66, 41, 1, 2000.00, 2000.00),
-(10, 67, 37, 1, 3500.00, 3500.00);
+(9, 66, 41, 1, 2000.00, 2000.00);
 
 --
 -- Indexes for dumped tables
@@ -301,7 +298,7 @@ ALTER TABLE `products`
 --
 ALTER TABLE `transactions`
   ADD CONSTRAINT `transactions_ibfk_1` FOREIGN KEY (`fid_admin`) REFERENCES `admin` (`id`),
-  ADD CONSTRAINT `transactions_ibfk_2` FOREIGN KEY (`fid_member`) REFERENCES `member` (`id`);
+  ADD CONSTRAINT `transactions_ibfk_2` FOREIGN KEY (`fid_member`) REFERENCES `member` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `transactions_details`

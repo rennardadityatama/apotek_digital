@@ -71,7 +71,15 @@ $wa_text .= "Metode: " . ucfirst($trans['payment_method']) . "\n";
 $wa_text .= "Terima kasih!";
 
 // Format nomor WA (hilangkan 0 depan, ganti 62)
-$wa_number = preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $trans['member_phone']));
+$wa_number = preg_replace('/[^0-9]/', '', $trans['member_phone']);
+if (preg_match('/^62/', $wa_number)) {
+    // Sudah format internasional, biarkan
+} elseif (preg_match('/^08/', $wa_number)) {
+    $wa_number = '62' . substr($wa_number, 1);
+} elseif (preg_match('/^0/', $wa_number)) {
+    $wa_number = '62' . substr($wa_number, 1);
+}
+// Jika sudah 628xxx atau 62xxx, tetap
 
 // Kirim ke Fonnte
 $curl = curl_init();

@@ -80,7 +80,7 @@ if ($role === 'Admin') {
                 <hr>
                 <ul class="list-unstyled mb-2">
                     <li class="d-flex justify-content-between"><span>Admin:</span> <span><?= htmlspecialchars($trans['admin_name']) ?></span></li>
-                    <li class="d-flex justify-content-between"><span>Member:</span> <span><?= $trans['member_name'] ? htmlspecialchars($trans['member_name']) : '<span class="text-muted">-</span>' ?></span></li>
+                    <li class="d-flex justify-content-between"><span>Member:</span> <span><?= $trans['member_name'] ? htmlspecialchars($trans['member_name']) : '<span class="text-muted"> Umum </span>' ?></span></li>
                     <li class="d-flex justify-content-between"><span>Metode:</span> <span><?= htmlspecialchars(ucfirst($trans['payment_method'])) ?></span></li>
                 </ul>
                 <hr>
