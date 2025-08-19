@@ -50,6 +50,34 @@ $sql = "SELECT * FROM member";
 $result = mysqli_query($conn, $sql);
 
 $no = 1;
+
+if (isset($_GET['delete_id'])) {
+    $delete_id = intval($_GET['delete_id']);
+    // Cek status member
+    $stmt = $conn->prepare("SELECT status FROM member WHERE id = ?");
+    $stmt->bind_param("i", $delete_id);
+    $stmt->execute();
+    $res = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$res) {
+        $_SESSION['error'] = 'Member tidak ditemukan';
+    } elseif ($res['status'] === 'active') {
+        $_SESSION['error'] = 'Member yang aktif tidak bisa dihapus!';
+    } else {
+        $stmt = $conn->prepare("DELETE FROM member WHERE id = ?");
+        $stmt->bind_param("i", $delete_id);
+        if ($stmt->execute()) {
+            $_SESSION['success'] = 'Data berhasil dihapus';
+        } else {
+            $_SESSION['error'] = 'Gagal menghapus member';
+        }
+        $stmt->close();
+    }
+    header("Location: member.php");
+    exit();
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -210,21 +238,18 @@ $no = 1;
                             </td>
                             <td><?= htmlspecialchars($row['created_at']); ?></td>
                             <td>
-                                <a href="<?= $role === 'Admin' ? '../../activities/admin/delete_member.php?id=' . $row['id'] : '../../activities/kasir/delete_member.php?id=' . $row['id'] ?>"
-                                   class="text-danger me-2"
-                                   title="Hapus"
-                                   onclick="return confirm('Yakin ingin menghapus member ini?');">
-                                    <i class="fas fa-trash-alt"></i>
-                                </a>
-                                <a href="#"
-                                   class="text-warning edit-member"
-                                   title="Edit"
-                                   data-id="<?= $row['id'] ?>"
-                                   data-name="<?= htmlspecialchars($row['name']) ?>"
-                                   data-phone="<?= htmlspecialchars($row['phone']) ?>"
-                                   data-point="<?= (int)$row['point'] ?>">
-                                    <i class="fas fa-edit"></i>
-                                </a>
+                                <button type="button" class="btn btn-warning btn-sm edit-member"
+                                    data-id="<?= $row['id'] ?>"
+                                    data-name="<?= htmlspecialchars($row['name']) ?>"
+                                    data-phone="<?= htmlspecialchars($row['phone']) ?>"
+                                    data-point="<?= (int)$row['point'] ?>">
+                                    Edit
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm delete-member"
+                                    data-id="<?= $row['id'] ?>"
+                                    data-name="<?= htmlspecialchars($row['name']) ?>">
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                     <?php endwhile; ?>
@@ -271,30 +296,44 @@ $no = 1;
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Tombol tambah member
-            document.querySelector('[data-bs-target="#memberModal"]').addEventListener('click', function() {
-                document.getElementById('memberModalLabel').textContent = 'Tambah Member';
-                document.getElementById('formMember').reset();
-                document.getElementById('member_id').value = '';
-                document.getElementById('formMember').action = '../../activities/admin/add_member.php';
-                document.getElementById('member_point').value = 0;
-                document.getElementById('member_point').readOnly = true;
-            });
+        // Ambil role dari PHP
+        const userRole = "<?= strtolower($role) ?>";
 
-            // Tombol edit member
-            document.querySelectorAll('.edit-member').forEach(function(btn) {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    document.getElementById('memberModalLabel').textContent = 'Edit Member';
-                    document.getElementById('member_id').value = this.dataset.id;
-                    document.getElementById('member_name').value = this.dataset.name;
-                    document.getElementById('member_phone').value = this.dataset.phone;
-                    document.getElementById('member_point').value = this.dataset.point;
-                    document.getElementById('formMember').action = '../../activities/admin/edit_member.php';
-                    document.getElementById('member_point').readOnly = true;
-                    var modal = new bootstrap.Modal(document.getElementById('memberModal'));
-                    modal.show();
+        // Tombol edit member
+        document.querySelectorAll('.edit-member').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.getElementById('memberModalLabel').textContent = 'Edit Member';
+                document.getElementById('member_id').value = this.dataset.id;
+                document.getElementById('member_name').value = this.dataset.name;
+                document.getElementById('member_phone').value = this.dataset.phone;
+                document.getElementById('member_point').value = this.dataset.point;
+                document.getElementById('formMember').action =
+                    userRole === 'admin' ?
+                    '../../activities/admin/edit_member.php' :
+                    '../../activities/kasir/edit_member.php';
+                document.getElementById('member_point').readOnly = true;
+                var modal = new bootstrap.Modal(document.getElementById('memberModal'));
+                modal.show();
+            });
+        });
+
+        document.querySelectorAll('.delete-member').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var memberId = this.dataset.id;
+                var memberName = this.dataset.name;
+                Swal.fire({
+                    title: 'Hapus Member?',
+                    text: "Yakin ingin menghapus member '" + memberName + "'?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "member.php?delete_id=" + memberId;
+                    }
                 });
             });
         });

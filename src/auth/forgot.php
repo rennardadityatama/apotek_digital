@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email'])) {
         $stmt->execute();
 
         // Buat link reset password
-        $reset_link = "http://localhost/kasir_digital/src/auth/change.php?token=" . $token;
+        $reset_link = "http://localhost/apotek_digital/src/auth/change.php?token=" . $token;
 
         // Kirim email menggunakan PHPMailer
         $mail = new PHPMailer(true);

@@ -513,8 +513,7 @@ if (isset($_POST['save_products'])) {
                                 <div class="col-md-6 mb-3">
                                     <label for="barcodeInput" class="form-label">Barcode</label>
                                     <input type="text" name="barcode" id="barcodeInput" class="form-control"
-                                        oninput="generateBarcode(); this.value = this.value.replace(/[^0-9]/g, '').slice(0,8);"
-                                        maxlength="8" pattern="\d{8}" inputmode="numeric"
+                                        oninput="generateBarcode();"
                                         placeholder="Kosongkan jika ingin di-generate otomatis">
                                     <div id="barcodePreview" class="mt-2"></div>
                                 </div>
